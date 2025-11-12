@@ -18,6 +18,7 @@ architecture sim of tb_uart_rx_top is
   signal data_out   : std_logic_vector(7 downto 0);
   signal data_rdy : std_logic;
 
+
   -- procedure to send a UART byte (8N1, LSB first)
   procedure send_byte(
     signal rx_s : out std_logic;

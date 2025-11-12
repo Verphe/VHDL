@@ -10,13 +10,15 @@ entity uart_rx_top is
         rx           : in  std_logic;                     --UART RX pin
         data_out     : out std_logic_vector(7 downto 0);  --Mottatt databyte
         data_rdy     : out std_logic;                      --Puls når databyte er klar
-        rx_led      : out std_logic                      --LED pin for mottatt data
+        rx_led      : out std_logic;                      --LED pin for mottatt data
+        HEX0, HEX1  : out std_logic_vector(7 downto 0)    -- De to hex verdiene for display
     );
 end uart_rx_top;
 
 architecture arch of uart_rx_top is
     signal sample_tick  : std_logic;                     --Sample tick (8x baud)
     --signal q_count      : std_logic_vector(9 downto 0);  --Teller for baud rate generator (Kan brukes for output)
+    
 
 begin
     --Baud generator
@@ -63,6 +65,16 @@ begin
             data_in   => data_out, --Data inngang fra UART RX
             data_out  => data_out, --Data utgang
             flag_out  => open --Ikke bruk flagg utgang
+        );
+    --Kontroller for display
+       uart_display_inst : entity work.UART_CTRL_DISPLAY
+        port map (
+            clk        => clk,
+            reset      => reset,
+            data_in    => data_out,
+            data_ready => data_rdy,
+            HEX0       => HEX0,
+            HEX1       => HEX1
         );
 
 end arch;
