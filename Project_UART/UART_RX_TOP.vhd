@@ -9,7 +9,8 @@ entity uart_rx_top is
         reset        : in  std_logic;                     --Reset
         rx           : in  std_logic;                     --UART RX pin
         data_out     : out std_logic_vector(7 downto 0);  --Mottatt databyte
-        data_rdy     : out std_logic                      --Puls når databyte er klar
+        data_rdy     : out std_logic;                      --Puls når databyte er klar
+        rx_led      : out std_logic                      --LED pin for mottatt data
     );
 end uart_rx_top;
 
@@ -48,7 +49,8 @@ begin
             rx           => rx,
             sample_tick  => sample_tick,
             rx_done_tick => data_rdy,
-            data_out     => data_out
+            data_out     => data_out,
+            o_rx_led     => rx_led 
         );
 
     -- Lagring av mottatt byte

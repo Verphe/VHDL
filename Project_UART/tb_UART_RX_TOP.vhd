@@ -49,7 +49,8 @@ begin
       reset      => reset,
       rx         => rx,
       data_out   => data_out,
-      data_rdy   => data_rdy
+      data_rdy   => data_rdy,
+      rx_led    => open
     );
 
   ---------------------------------------------------------------------------

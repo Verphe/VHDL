@@ -9,7 +9,7 @@ entity UART_RX is
     generic (
         DATABIT        : integer := 8; --Antall databit
         DBIT_IN_BINARY : integer := 3; --Maks antall databit i binær [1 1 1] = 8
-        STOPBIT_TICKS  : integer := 8  --Antall ticks for stoppbit (8*1)
+        STOPBIT_TICKS  : integer := 8;  --Antall ticks for stoppbit (8*1)
         LED_CLKS       : integer := 100000000 --Klokkesyklus for LED blink (2 sekunder på 50MHz)
     );
     port (
@@ -18,7 +18,7 @@ entity UART_RX is
         rx             : in  std_logic;               --Serriell data inn
         sample_tick    : in  std_logic;               --Sample tick (8x baud)
         rx_done_tick   : out std_logic;               --Data mottatt flagg
-        data_out       : out std_logic_vector(DATABIT-1 downto 0) --Mottatt data
+        data_out       : out std_logic_vector(DATABIT-1 downto 0); --Mottatt data
         o_rx_led        : out std_logic                --LED pin for mottatt data
     );
 end UART_RX;
@@ -74,15 +74,15 @@ architecture arch of UART_RX is
             when IDLE => --Vent på startbit
                 
                 if rx = '0' then
-                    state_next <= start; --Bytt til startbitregistreringstilstand
+                    state_next <= START; --Bytt til startbitregistreringstilstand
                     s_next <= (others => '0'); --Reset punktprøvingsteller 
                 end if;
             
-            when start => --Vent til punkttelleren treffer midten av startbitten
+            when START => --Vent til punkttelleren treffer midten av startbitten
                 
                 if sample_tick = '1' then
                     if to_integer(s_reg) = DBIT_IN_BINARY then
-                        state_next <= data; --Bytt til databit-tilstand
+                        state_next <= DATA; --Bytt til databit-tilstand
                         s_next     <= (others => '0'); --Reset punktteller
                         n_next     <= (others => '0'); --Reset databitteller for å begynne telling
                     else
@@ -90,7 +90,7 @@ architecture arch of UART_RX is
                     end if;
                 end if;
             
-            when data => --Sjekk databit
+            when DATA => --Sjekk databit
                 if sample_tick = '1' then --Dersom databit er 1
                     if to_integer(s_reg) = (DATABIT-1) then --OG dersom databitten er registrert på midten
                         s_next <= (others => '0'); --Reset punktteller
@@ -98,7 +98,7 @@ architecture arch of UART_RX is
                         b_next <= rx & b_reg(DATABIT-1 downto 1); --Fjerner forrige buffer mot minst signifikante bit og setter nyeste rx-bit inn mest signifikante bit
 
                         if to_integer(n_reg) = (DATABIT-1) then --Dersom hel byte er motatt
-                            state_next <= stop; --Bytt til stoppbit-tilstand
+                            state_next <= STOP; --Bytt til stoppbit-tilstand
                         else
                             n_next <= n_reg + 1; --Ellers tell flere databit
                         end if;
@@ -108,7 +108,7 @@ architecture arch of UART_RX is
                     end if;
                 end if;
             
-            when stop => --Sjekk stoppbit
+            when STOP => --Sjekk stoppbit
                 if sample_tick = '1' then
                     if to_integer(s_reg) = STOPBIT_TICKS - 1 then
                         state_next <= IDLE; --Gå tilbake til idle tilstand
@@ -124,7 +124,7 @@ architecture arch of UART_RX is
         end case;
     end process;
 
-    LED_TIMER : process(clk)
+    LED_TIMER_PROCESS : process(clk)
     begin
         if rising_edge(clk) then
             if led_active = '1' then
@@ -136,10 +136,10 @@ architecture arch of UART_RX is
                 end if;
             end if;
         end if;
-    end process LED_TIMER;
+    end process LED_TIMER_PROCESS;
 
     o_rx_led <= r_rx_led; --Led utgang
 
     data_out <= b_reg; --Koble databuffer til data_out port
 
-end arch;
+end architecture arch;
