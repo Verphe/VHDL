@@ -10,6 +10,7 @@ entity UART_RX is
         DATABIT        : integer := 8; --Antall databit
         DBIT_IN_BINARY : integer := 3; --Maks antall databit i binær [1 1 1] = 8
         STOPBIT_TICKS  : integer := 8  --Antall ticks for stoppbit (8*1)
+        LED_CLKS       : integer := 100000000 --Klokkesyklus for LED blink (2 sekunder på 50MHz)
     );
     port (
         clk            : in  std_logic;               --Systemklokke
@@ -18,6 +19,7 @@ entity UART_RX is
         sample_tick    : in  std_logic;               --Sample tick (8x baud)
         rx_done_tick   : out std_logic;               --Data mottatt flagg
         data_out       : out std_logic_vector(DATABIT-1 downto 0) --Mottatt data
+        o_rx_led        : out std_logic                --LED pin for mottatt data
     );
 end UART_RX;
 
@@ -30,7 +32,13 @@ architecture arch of UART_RX is
     signal n_reg, n_next : unsigned(DBIT_IN_BINARY-1 downto 0);  --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
     
-    begin
+    -- Led lyser når byte blir mottatt
+    signal r_rx_led       : std_logic := '0';
+    signal led_timer     : unsigned(26 downto 0) := (others => '0'); --27 bit for å telle til 100 million (2 sek ved 50MHz)
+    signal led_active    : std_logic := '0';
+    constant led_time   : unsigned(26 downto 0) := to_unsigned(LED_CLKS, 27);
+
+    begin 
     
     --Tilstandsmaskin og register
 
@@ -105,12 +113,32 @@ architecture arch of UART_RX is
                     if to_integer(s_reg) = STOPBIT_TICKS - 1 then
                         state_next <= IDLE; --Gå tilbake til idle tilstand
                         rx_done_tick <= '1'; --Byte er klar! yay
+                        r_rx_led <= '1'; --Sett høy for å indikere mottatt byte
+                        led_active <= '1'; --Aktiver LED timer
+                        led_timer <= (others => '0'); --Reset LED timer
+
                     else
                         s_next <= s_reg + 1; --Tell flere punkter
                     end if;
                 end if;
         end case;
     end process;
+
+    LED_TIMER : process(clk)
+    begin
+        if rising_edge(clk) then
+            if led_active = '1' then
+                if led_timer < led_time then
+                    led_timer <= led_timer + 1;
+                else
+                    r_rx_led <= '0'; --Slå av LED etter tidsperiode
+                    led_active <= '0'; --Deaktiver LED timer
+                end if;
+            end if;
+        end if;
+    end process LED_TIMER;
+
+    o_rx_led <= r_rx_led; --Led utgang
 
     data_out <= b_reg; --Koble databuffer til data_out port
 
