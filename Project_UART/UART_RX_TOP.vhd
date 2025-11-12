@@ -50,4 +50,17 @@ begin
             rx_done_tick => data_rdy,
             data_out     => data_out
         );
+
+    -- Lagring av mottatt byte
+    uart_rx_save_byte_inst : entity work.flag_buff
+        port map (
+            clk       => clk,
+            reset     => reset,
+            clr_flag  => '0', --Ikke bruk klar flagg
+            set_flag  => data_rdy, --Sett flagg når data er mottatt
+            data_in   => data_out, --Data inngang fra UART RX
+            data_out  => data_out, --Data utgang
+            flag_out  => open --Ikke bruk flagg utgang
+        );
+
 end arch;
