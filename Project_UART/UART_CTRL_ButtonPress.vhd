@@ -14,7 +14,7 @@ entity UART_CTRL_ButtonPress is
 end UART_CTRL_ButtonPress;
 
 architecture rtl of UART_CTRL_ButtonPress is
-    constant FIXED_BYTE : std_logic_vector(7 downto 0) := x"HF";  -- Sender ut Håkon og Filip :)
+    constant FIXED_BYTE : std_logic_vector(7 downto 0) := x"??";  -- Sender ut Håkon og Filip :) "48" = H og "46" = F
     signal valid_reg : std_logic := '0';
 begin
 
