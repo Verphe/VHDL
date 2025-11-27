@@ -12,7 +12,7 @@ entity UART_RX is
     );
     port (
         clk            : in  std_logic;               --Systemklokke
-        rst            : in  std_logic;               --Reset
+        reset            : in  std_logic;               --Reset
         rx             : in  std_logic;               --Serriell data inn
         sample_tick    : in  std_logic;               --Sample tick (8x baud)
         rx_done_tick   : out std_logic;               --Data mottatt flagg
@@ -35,9 +35,9 @@ architecture arch of UART_RX is
     
     --Tilstandsmaskin og register
 
-    process(clk, rst)
+    process(clk, reset)
     begin
-        if rst = '1' then
+        if reset = '1' then
             state_reg <= IDLE;
             s_reg <= (others => '0'); --Reset punktprøvingsteller 
             n_reg <= (others => '0'); --Reset databiteller

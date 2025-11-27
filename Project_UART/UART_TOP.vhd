@@ -49,7 +49,7 @@ begin
         )
         port map (
             clk          => clk,
-            rst          => reset,
+            reset          => reset,
             rx           => rx,
             sample_tick  => sample_tick,
             rx_done_tick => data_rdy_rx,
