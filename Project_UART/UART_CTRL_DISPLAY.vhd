@@ -7,8 +7,8 @@ entity UART_CTRL_DISPLAY is
     port (
         --clk            : in  std_logic;                      -- 50 MHz
         --reset          : in  std_logic;
-        --data_in        : in  std_logic_vector(7 downto 0);   -- Mottat byte
         --data_ready     : in  std_logic;
+        data_in        : in  std_logic_vector(7 downto 0);   -- Mottatt byte
         HEX0           : out std_logic_vector(7 downto 0);   
         HEX1           : out std_logic_vector(7 downto 0);
         HEX2           : out std_logic_vector(7 downto 0)
@@ -17,8 +17,6 @@ end UART_CTRL_DISPLAY;
 
 architecture rtl of UART_CTRL_DISPLAY is
 
-    -- Simulert mottatt byte (Endre til ekte signal senere)
-    constant rx_byte : std_logic_vector(7 downto 0) := "11111111"; 
 
     signal ascii_val : integer range 0 to 255;
 	 signal hundreds   : integer range 0 to 9;
@@ -43,7 +41,7 @@ architecture rtl of UART_CTRL_DISPLAY is
 begin
 
     -- Konverter 8-bit -> ASCII heltall
-    ascii_val <= to_integer(unsigned(rx_byte)); 
+    ascii_val <= to_integer(unsigned(data_in)); 
 
     -- Del i desimaler
 	hundreds <= (ascii_val /100) mod 10; --Tredje siffer
