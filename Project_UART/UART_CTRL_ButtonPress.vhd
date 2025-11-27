@@ -3,6 +3,9 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+--Må fikse at data sendes ut og at data_valid sendes
+--Data ut til data_in_button, data_valid til set_flag (TX)
+
 entity UART_CTRL_ButtonPress is
     port (
         clk          : in  std_logic;      --50 MHz

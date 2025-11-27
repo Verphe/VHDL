@@ -8,8 +8,8 @@ entity uart_rx_top is
         clk          : in  std_logic;                     --Systemklokke (50MHz)
         reset        : in  std_logic;                     --Reset
         rx           : in  std_logic;                     --UART RX pin
-        data_out     : out std_logic_vector(7 downto 0);  --Mottatt databyte
-        data_rdy     : out std_logic;                      --Puls når databyte er klar
+        data_out_rx     : out std_logic_vector(7 downto 0);  --Mottatt databyte
+        data_rdy_rx     : out std_logic;                      --Puls når databyte er klar
         rx_led      : out std_logic;                      --LED pin for mottatt data
         display_output  : out std_logic_vector(7 downto 0)    -- ASCII display
     );
