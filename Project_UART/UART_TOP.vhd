@@ -80,4 +80,16 @@ begin
             HEX2       => HEX2
         );
 
+        --Leadready kontroller
+        UART_leadready_inst : entity work.UART_CTRL_LEADREADY
+        generic map (
+            LED_CLKS => 100000000 --2 sekunder ved 50MHz
+        )
+        port map (
+            clk         => clk,
+            reset       => reset,
+            rx_done_tick => data_rdy_rx,
+            rx_led      => rx_led
+        );
+
 end arch;
