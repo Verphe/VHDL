@@ -64,7 +64,7 @@ architecture arch of UART_RX is
 
     --Tilstander
 
-    process(state_reg, rx, sample_tick, s_reg, n_reg)
+    process(state_reg, rx, sample_tick, s_reg, n_reg, b_reg)
     begin
         --Standard
         state_next <= state_reg;

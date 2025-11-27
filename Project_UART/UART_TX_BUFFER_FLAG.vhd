@@ -46,19 +46,19 @@ architecture arch_tx_buf_flag of UART_TX_BUFFER_FLAG is
         tx_flag_next <= tx_flag_reg;
 
         --MUX
-        if(switch = '0') then
+        if switch = '0' then
             --Velger data fra RX
-            if(set_flag = '1') then
+            if set_flag = '1' then
                 tx_buf_next <= data_in_RX; --Sett utgangsdata til RX
                 tx_flag_next <= '1'; --Sett flagg høyt
-            elsif(clr_flag = '1') then
+            elsif clr_flag = '1'  then
                 tx_flag_next <= '0';
             end if;
         else
-            if(set_flag = '1') then
+            if set_flag = '1' then
                 tx_buf_next <= data_in_button;
                 tx_flag_next <= '1';
-            elsif(clr_flag = '1') then
+            elsif clr_flag = '1'  then
                 tx_flag_next <= '0';
             end if;
         end if;
