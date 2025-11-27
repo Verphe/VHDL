@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 
 library work;
 
-entity uart_rx_top is
+entity uart_top is
     port (
         clk          : in  std_logic;                     --Systemklokke (50MHz)
         reset        : in  std_logic;                     --Reset
@@ -15,9 +15,9 @@ entity uart_rx_top is
         HEX1        : out std_logic_vector(7 downto 0);     
         HEX2        : out std_logic_vector(7 downto 0)     
     );
-end uart_rx_top;
+end uart_top;
 
-architecture arch of uart_rx_top is
+architecture arch of uart_top is
     signal sample_tick  : std_logic;                     --Sample tick (8x baud)
     --signal q_count      : std_logic_vector(9 downto 0);  --Teller for baud rate generator (Kan brukes for output)
     
@@ -53,8 +53,8 @@ begin
             rx           => rx,
             sample_tick  => sample_tick,
             rx_done_tick => data_rdy_rx,
-            data_out     => data_out_rx,
-            o_rx_led     => rx_led 
+            data_out     => data_out_rx
+            --o_rx_led     => rx_led 
         );
 
     -- Lagring av mottatt byte
