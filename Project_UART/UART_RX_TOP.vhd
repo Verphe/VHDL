@@ -11,7 +11,9 @@ entity uart_rx_top is
         data_out_rx     : out std_logic_vector(7 downto 0);  --Mottatt databyte
         data_rdy_rx     : out std_logic;                      --Puls når databyte er klar
         rx_led      : out std_logic;                      --LED pin for mottatt data
-        display_output  : out std_logic_vector(7 downto 0)    -- ASCII display
+        HEX0        : out std_logic_vector(7 downto 0);    --Hex displayer
+        HEX1        : out std_logic_vector(7 downto 0);     
+        HEX2        : out std_logic_vector(7 downto 0)     
     );
 end uart_rx_top;
 
@@ -50,8 +52,8 @@ begin
             rst          => reset,
             rx           => rx,
             sample_tick  => sample_tick,
-            rx_done_tick => data_rdy,
-            data_out     => data_out,
+            rx_done_tick => data_rdy_rx,
+            data_out     => data_out_rx,
             o_rx_led     => rx_led 
         );
 
@@ -61,9 +63,9 @@ begin
             clk       => clk,
             reset     => reset,
             clr_flag  => '0', --Ikke bruk klar flagg
-            set_flag  => data_rdy, --Sett flagg når data er mottatt
-            data_in   => data_out, --Data inngang fra UART RX
-            data_out  => data_out, --Data utgang
+            set_flag  => data_rdy_rx, --Sett flagg når data er mottatt
+            data_in   => data_out_rx, --Data inngang fra UART RX
+            data_out  => data_out_rx, --Data utgang
             flag_out  => open --Ikke bruk flagg utgang
         );
     --Kontroller for display
@@ -71,9 +73,11 @@ begin
         port map (
             clk        => clk,
             reset      => reset,
-            data_in    => data_out,
-            data_ready => data_rdy,
-            display_output => display_output
+            data_in    => data_out_rx,
+            -- data_ready => data_rdy,
+            HEX0       => HEX0,
+            HEX1       => HEX1,
+            HEX2       => HEX2
         );
 
 end arch;
