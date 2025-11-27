@@ -11,7 +11,7 @@ entity uart_rx_top is
         data_out     : out std_logic_vector(7 downto 0);  --Mottatt databyte
         data_rdy     : out std_logic;                      --Puls når databyte er klar
         rx_led      : out std_logic;                      --LED pin for mottatt data
-        HEX0, HEX1  : out std_logic_vector(7 downto 0)    -- De to hex verdiene for display
+        display_output  : out std_logic_vector(7 downto 0)    -- ASCII display
     );
 end uart_rx_top;
 
@@ -73,8 +73,7 @@ begin
             reset      => reset,
             data_in    => data_out,
             data_ready => data_rdy,
-            HEX0       => HEX0,
-            HEX1       => HEX1
+            display_output => display_output
         );
 
 end arch;
