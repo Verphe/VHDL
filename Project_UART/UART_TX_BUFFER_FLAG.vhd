@@ -4,7 +4,7 @@ use ieee.numeric_std.all;
 
 entity UART_TX_BUFFER_FLAG is
     generic (
-        DATABITS : integer := 8; --Antall databit
+        DATABITS : integer := 8 --Antall databit
     );
     port (
         clk             : in  std_logic;
