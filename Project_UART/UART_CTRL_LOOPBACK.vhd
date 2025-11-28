@@ -21,9 +21,6 @@ architecture rtl of UART_CTRL_LOOPBACK is
     --TX signaler
     signal tx_start : std_logic;
     signal tx_byte  : std_logic_vector(7 downto 0);
-    signal tx_done  : std_logic;
-
-
 
 begin
     UART_RX_INST : entity work.UART_RX
@@ -42,7 +39,7 @@ begin
             tx_start   => tx_start,
             tx_byte    => tx_byte,
             tx         => tx,
-            tx_done_tick    => tx_done
+            tx_done_tick    => open
 
         );  
         
