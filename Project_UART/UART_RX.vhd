@@ -25,12 +25,10 @@ architecture arch of UART_RX is
     signal state_reg, state_next : state_type;
 
     --8x oversampling (0-7) gir 3 bit
-    signal s_reg, s_next : unsigned(2 downto 0);                 --Punktprøvingsteller (0-7)
-    signal n_reg, n_next : unsigned(DBIT_IN_BINARY-1 downto 0);  --Databitsteller (0-7)
+    signal s_reg, s_next : unsigned(2 downto 0);  --Punktprøvingsteller (0-7)
+    signal n_reg, n_next : unsigned(2 downto 0);  --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
     
-
-
     begin 
     
     --Tilstandsmaskin og register
@@ -74,7 +72,7 @@ architecture arch of UART_RX is
             when START => --Vent til punkttelleren treffer midten av startbitten
                 
                 if sample_tick = '1' then
-                    if to_integer(s_reg) = DBIT_IN_BINARY then
+                    if to_integer(s_reg) = 3 then
                         state_next <= DATA; --Bytt til databit-tilstand
                         s_next     <= (others => '0'); --Reset punktteller
                         n_next     <= (others => '0'); --Reset databitteller for å begynne telling
@@ -88,7 +86,7 @@ architecture arch of UART_RX is
                     if to_integer(s_reg) = (DATABIT-1) then --OG dersom databitten er registrert på midten
                         s_next <= (others => '0'); --Reset punktteller
 
-                        b_next <= rx & b_reg(DATABIT-1 downto 1); --Fjerner forrige buffer mot minst signifikante bit og setter nyeste rx-bit inn mest signifikante bit
+                        b_next <= b_reg(DATABIT-2 downto 0) & rx; --Fjerner forrige buffer mot minst signifikante bit og setter nyeste rx-bit inn mest signifikante bit
 
                         if to_integer(n_reg) = (DATABIT-1) then --Dersom hel byte er motatt
                             state_next <= STOP; --Bytt til stoppbit-tilstand
@@ -112,8 +110,6 @@ architecture arch of UART_RX is
                 end if;
         end case;
     end process;
-
-
 
     data_out <= b_reg; --Koble databuffer til data_out port
 

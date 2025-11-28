@@ -19,7 +19,7 @@ architecture rtl of UART_CTRL_DISPLAY is
 
 
     signal ascii_val : integer range 0 to 255;
-	signal hundreds   : integer range 0 to 9;
+	signal hundreds  : integer range 0 to 9;
     signal tens      : integer range 0 to 9;
     signal ones      : integer range 0 to 9;
 
@@ -47,18 +47,18 @@ begin
             HEX1 <= (others => '1');
             HEX2 <= (others => '1');
         elsif rising_edge(clk) then
-        -- Konverter 8-bit -> ASCII heltall
-        ascii_val <= to_integer(unsigned(data_in)); 
+            -- Konverter 8-bit -> ASCII heltall
+            ascii_val <= to_integer(unsigned(data_in)); 
 
-        -- Del i desimaler
-        hundreds <= (ascii_val /100) mod 10; --Tredje siffer
-        tens <= (ascii_val / 10) mod 10; -- Andre siffer
-        ones <= ascii_val mod 10;        -- Første siffer
+            -- Del i desimaler
+            hundreds <= (ascii_val /100) mod 10; --Tredje siffer
+            tens <= (ascii_val / 10) mod 10; -- Andre siffer
+            ones <= ascii_val mod 10;        -- Første siffer
 
-        -- Display utganger
-        HEX2 <= SEG(hundreds); 
-        HEX1 <= SEG(tens);
-        HEX0 <= SEG(ones);
+            -- Display utganger
+            HEX2 <= SEG(hundreds); 
+            HEX1 <= SEG(tens);
+            HEX0 <= SEG(ones);
         end if;
     end process;
 end rtl;

@@ -10,7 +10,7 @@ entity UART_TX is
     );
     port (
         clk             : in  std_logic;               --Systemklokke
-        rst             : in  std_logic;               --Reset
+        reset           : in  std_logic;               --Reset
         tx_start        : in  std_logic;               --Start sending av data
         data_in         : in  std_logic_vector(DATABITS-1 downto 0); --Data som skal sendes
         sample_tick     : in  std_logic;               --Sample tick (8x baud)
@@ -24,22 +24,24 @@ architecture arch of UART_TX is
     signal state_reg, state_next : state_type;
 
     --Trenger ikke oversampling i TX, men en enkel teller for baud, men ettersom at vi har brukt 8x oversampling i baudgen, beholder jeg det for enkelhets skyld
-    signal s_reg, s_next : unsigned(2 downto 0);                  --Punktprøvingsteller (0-7)
-    signal n_reg, n_next : unsigned(DATABITS-1 downto 0);         --Databitsteller (0-7)
+    signal s_reg, s_next : std_logic_vector(2 downto 0);         --Punktprøvingsteller (0-7)
+    signal n_reg, n_next : std_logic_vector(2 downto 0);         --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABITS-1 downto 0); --Databuffer
     signal tx_reg, tx_next: std_logic;                            --Utgangssignal
+    signal tx_flag_reg, tx_flag_next : std_logic;                 --Flagg for å si ifra at TX er ferdig
 
     begin
     
     --Register (Samme som RX)
-    process(clk, rst)
+    process(clk, reset)
     begin
-        if rst = '1' then
+        if reset = '1' then
             state_reg <= IDLE;
             s_reg <= (others => '0'); --Reset punktprøvingsteller 
             n_reg <= (others => '0'); --Reset databiteller
             b_reg <= (others => '0'); --Reset databuffer
             tx_reg <= '1'; --Sett TX høy
+            tx_flag_reg <= '0'; --Sett tx_done lav
         
         elsif rising_edge(clk) then
             state_reg <= state_next;
@@ -47,6 +49,7 @@ architecture arch of UART_TX is
             n_reg <= n_next; --Databiteller oppdatering
             b_reg <= b_next; --Databuffer oppdatering
             tx_reg <= tx_next; --TX oppdatering
+            tx_flag_reg <= tx_flag_next;
         end if;
     end process;  
 
@@ -59,7 +62,7 @@ architecture arch of UART_TX is
         b_next <= b_reg;
         tx_next <= tx_reg;
         state_next <= state_reg;
-        tx_done_tick <= '0';
+        tx_flag_next <= '0';
 
         case state_reg is
             when IDLE =>
@@ -67,6 +70,7 @@ architecture arch of UART_TX is
                     state_next <= START;
                     s_next <= (others => '0');
                     b_next <= data_in; --Dobbeltsjekk denne pls thanks very much
+                    n_next <= (others => '0');
                 end if;
 
             when START =>
@@ -84,8 +88,8 @@ architecture arch of UART_TX is
                     tx_next <= b_reg(0);
                     if to_integer(s_reg) = OVERSAMPLING-1 then
                         s_next <= (others  => '0');
-                        b_next <= '0' & b_reg(7 downto 1);
-                        if (n_reg = DATABIT-1) then
+                        b_next <= '0' & b_reg(DATABITS-1 downto 1);
+                        if (n_reg = DATABITS-1) then
                             state_next <= STOP;
                         else
                             n_next <= n_reg + 1;
@@ -100,7 +104,7 @@ architecture arch of UART_TX is
                     tx_next <= '1';
                     if to_integer(s_reg) = STOPBIT_TICKS-1 then
                         state_next <= IDLE;
-                        tx_done_tick <= '1';
+                        tx_flag_next <= '1';
                     else
                         s_next <= s_reg + 1;
                     end if;
@@ -109,6 +113,7 @@ architecture arch of UART_TX is
     end process;
         
     tx <= tx_reg;
+    tx_done_tick <= tx_flag_reg;
 
 end architecture arch;
     

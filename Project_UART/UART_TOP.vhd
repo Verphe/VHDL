@@ -5,11 +5,11 @@ library work;
 
 entity uart_top is
     port (
-        clk          : in  std_logic;                     --Systemklokke (50MHz)
-        reset        : in  std_logic;                     --Reset
-        rx           : in  std_logic;                     --UART RX pin
+        clk         : in  std_logic;                     --Systemklokke (50MHz)
+        reset       : in  std_logic;                     --Reset
+        rx          : in  std_logic;                     --UART RX pin
         rx_led      : out std_logic;                      --LED pin for mottatt data
-        tx           : out std_logic;                     --UART TX pin 
+        tx          : out std_logic;                     --UART TX pin 
         HEX0        : out std_logic_vector(7 downto 0);    --Hex displayer
         HEX1        : out std_logic_vector(7 downto 0);     
         HEX2        : out std_logic_vector(7 downto 0)     
@@ -18,10 +18,24 @@ end uart_top;
 
 architecture arch of uart_top is
     signal sample_tick  : std_logic;                     --Sample tick (8x baud)
-    --signal q_count      : std_logic_vector(9 downto 0);  --Teller for baud rate generator (Kan brukes for output)
-    signal done_tick_to_setflag : std_logic;
+    
+    --RX-signaler
+    signal rx_done_tick_to_setflag : std_logic;
     signal rx_data_to_save_byte : std_logic_vector(7 downto 0);
+
+    --TX-signaler
+
+    signal tx_buf_flag_start : std_logic; --Start sending tx
+    signal tx_data_tx_from_buffer : std_logic_vector(7 downto 0);
+    signal tx_done_tick_from_tx : std_logic;
+
+    
+    --CTRL-signaler
     signal save_byte_to_display : std_logic_vector(7 downto 0);
+    signal data_from_ctrl_to_tx : std_logic_vector(7 downto 0);
+    signal set_flag_from_ctrl_to_tx : std_logic;
+    signal clr_flag_from_ctrl_to_rx : std_logic;
+
 begin
     --Baud generator
     --50 MHz, 9600 Baud, 8x oversampling
@@ -49,21 +63,20 @@ begin
         )
         port map (
             clk          => clk,
-            reset          => reset,
+            reset        => reset,
             rx           => rx,
             sample_tick  => sample_tick,
-            rx_done_tick => done_tick_to_setflag,
+            rx_done_tick => rx_done_tick_to_setflag,
             data_out     => rx_data_to_save_byte
-            --o_rx_led     => rx_led 
         );
 
     -- Lagring av mottatt byte
-    uart_rx_save_byte_inst : entity work.flag_buff
+    uart_rx_save_byte_inst : entity work.flag_buff  
         port map (
             clk       => clk,
             reset     => reset,
-            clr_flag  => '0', --Ikke bruk klar flagg
-            set_flag  => done_tick_to_setflag, --Sett flagg når data er mottatt
+            clr_flag  => clr_flag_from_ctrl_to_rx, --Ikke bruk klar flagg
+            set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
             data_out  => save_byte_to_display, --Data utgang
             flag_out  => open --Ikke bruk flagg utgang
@@ -81,24 +94,46 @@ begin
         );
 
         --Leadready kontroller
-        UART_leadready_inst : entity work.UART_CTRL_LEADREADY
+        UART_ledready_inst : entity work.UART_CTRL_LEDREADY
         generic map (
             LED_CLKS => 100000000 --2 sekunder ved 50MHz
         )
         port map (
             clk         => clk,
             reset       => reset,
-            rx_done_tick => data_rdy_rx,
+            rx_done_tick => rx_done_tick_to_setflag,
             rx_led      => rx_led
         );
 
-        --Loopback kontroller
-        UART_loopback_inst : entity work.UART_CTRL_LOOPBACK
+        -- --Loopback kontroller
+        -- UART_loopback_inst : entity work.UART_CTRL_LOOPBACK
+        -- port map (
+        --     clk   => clk,
+        --     reset => reset,
+        --     rx    => rx,
+        --     tx    => tx  
+        -- );
+
+        UART_tx_inst : entity work.UART_TX
         port map (
-            clk   => clk,
+            clk => clk,
             reset => reset,
-            rx    => rx,
-            tx    => tx  
+            tx_start => tx_buf_flag_start,
+            data_in => data_from_ctrl_to_tx,
+            sample_tick => sample_tick,
+            tx  => tx,
+            tx_done_tick => tx_done_tick_from_tx
         );
-        
+
+        UART_tx_buff_flag_inst : entity work.UART_TX_BUFFER_FLAG
+        port map (
+            clk => clk,
+            reset => reset,
+            data_in => data_from_ctrl_to_tx,
+            data_out => tx_data_tx_from_buffer,
+            set_flag => set_flag_from_ctrl_to_tx,
+            clr_flag => tx_done_tick_from_tx,
+            tx_flag =>  tx_buf_flag_start
+        );
+
 end arch;

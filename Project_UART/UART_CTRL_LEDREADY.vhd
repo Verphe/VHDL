@@ -3,7 +3,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity UART_CTRL_LEADREADY is
+entity UART_CTRL_LEDREADY is
     generic (
         LED_CLKS       : integer := 100000000 --Klokkesyklus for LED blink (2 sekunder på 50MHz)
     );
@@ -13,9 +13,9 @@ entity UART_CTRL_LEADREADY is
         rx_done_tick : in  std_logic;      --Setter led på når byte er mottatt                    
         rx_led  : out std_logic       --LED som indikerer klar til å sende ny byte                    
     );
-end UART_CTRL_LEADREADY;
+end UART_CTRL_LEDREADY;
 
-architecture ledready of UART_CTRL_LEADREADY is
+architecture ledready of UART_CTRL_LEDREADY is
     -- Led lyser når byte blir mottatt
     signal r_rx_led       : std_logic := '0';
     signal led_timer     : unsigned(26 downto 0) := (others => '0'); --27 bit for å telle til 100 million (2 sek ved 50MHz)

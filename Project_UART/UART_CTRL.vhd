@@ -8,56 +8,35 @@ entity UART_CTRL is
     port (
         clk          : in  std_logic;                      -- 50 MHz
         reset        : in  std_logic;
+
+        --Analog styring
         switch       : in  std_logic;                      -- Velger mellom loopback og knappetrykkx
         button_press : in  std_logic;                      -- Knappetrykk
-        rx           : in  std_logic_vector(7 downto 0);                      -- Seriell data inn
-        tx           : out std_logic_vector(7 downto 0);                      -- Seriell data ut
-        rx_flag      : in std_logic;                       -- Indikerer at RX har mottatt data
-        tx_flag      : out std_logic;                      -- Indikerer at TX er opptatt
-        set_flag     : in  std_logic;                      -- Flag at tx er opptatt
-        clr_flag     : in  std_logic                       -- TX er ferdig, kan motta igjen
+
+        --Data
+        rx_data           : in  std_logic_vector(7 downto 0);   -- Seriell data inn
+        tx_data           : out std_logic_vector(7 downto 0);   -- Seriell data ut
+
+        --Flagg
+        rx_flag      : in  std_logic;                       -- TX er ferdig, kan motta igjen
+        tx_flag      : in  std_logic;                      -- Indikerer at TX er opptatt
+        tx_set_flag  : out std_logic;                      -- Flag at tx er opptatt
+        rx_clr_flag  : out std_logic                       -- Indikerer at RX har mottatt data
     );
 end UART_CTRL;
 
 architecture rtl of UART_CTRL is
+    constant FIXED_BYTE : std_logic_vector(7 downto 0) := b"01000011";
+
     signal tx_buf_reg     : std_logic_vector(7 downto 0);
     signal tx_buf_next    : std_logic_vector(7 downto 0);
-
     signal tx_flag_reg, tx_flag_next : std_logic; --Utgangsflagg
-    signal data_in_button : std_logic_vector(7 downto 0);
-    signal data_in_RX     : std_logic_vector(7 downto 0);
-begin
+    
 
-    UART_CTRL_BUTTONPRESS : entity work.UART_CTRL_BUTTONPRESS
-        port map (
-        clk          => clk,
-        reset        => reset,
-        button_press => button_press,
-        data_out     => data_in_button,
-        data_valid   => tx_flag_next
-    );
+    begin
 
-    UART_CTRL_LOOPBACK : entity work.UART_CTRL_LOOPBACK
-        port map (
-        clk        => clk,
-        reset      => reset,
-        rx         => rx,
-        tx         => data_in_RX
-    );
-
-    UART_TX_BUFFER_FLAG : entity work.UART_TX_BUFFER_FLAG
-        port map (
-        clk             => clk,
-        reset           => reset,
-        tx_flag         => tx_flag,
-        set_flag        => set_flag,
-        clr_flag        => clr_flag,
-        data_in_RX     => data_in_RX,
-        data_out     => tx
-    );
-
-        process(clk, reset)
-        begin
+    process(clk, reset)
+    begin
         if reset = '1' then
             tx_buf_reg   <= (others => '0');
             tx_flag_reg  <= '0';
@@ -68,24 +47,32 @@ begin
     end process;
 
     
-process(tx_buf_reg, tx_flag_reg, set_flag, clr_flag, data_in_RX, data_in_button, switch)
+    process(tx_buf_reg, tx_flag_reg, tx_set_flag, rx_clr_flag, rx_data, button_press, switch)
     begin
-        tx_buf_next  <= tx_buf_reg;
-        tx_flag_next <= tx_flag_reg;
-
-        --MUX
-        if switch = '0' then
-           
+    
+    if switch = '0' then
+        if tx_flag = '1'then
+            rx_clr_flag <= '1';
         else
-            if set_flag = '1' then
-                tx_buf_next <= data_in_button;
-                tx_flag_next <= '1';
-            elsif clr_flag = '1' then
-                tx_flag_next <= '0';
-            end if;
+            rx_clr_flag <= '0';
         end if;
+        
+        if rx_flag = '1' then
+            tx_buf_next <= rx_data;
+            tx_flag_next <= '1';
+        end if;
+    
+    else
+        if button_press = '1' then
+            tx_buf_next <= FIXED_BYTE;
+            tx_flag_next <= '1';
+        else
+            tx_flag_next <= '0';
+        end if;
+    end if;
     end process;
-    tx <= tx_buf_reg;
-    tx_flag <= tx_flag_reg;
+
+    tx_data <= tx_buf_reg;
+    tx_set_flag <= tx_flag_reg;
 
 end rtl;
