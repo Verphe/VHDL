@@ -24,7 +24,7 @@ architecture arch of flag_buff is
         begin
         if reset = '1' then
             buf_reg <= (others => '0'); --Reset buffer register
-            flag_out <= '0'; --Reset flagg utgang
+            flag_reg <= '0'; --Reset flagg utgang
         elsif rising_edge(clk) then
             buf_reg <= buf_next; --Oppdater buffer register
             flag_reg <= flag_next; --Oppdater flagg utgang
