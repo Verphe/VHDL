@@ -7,10 +7,7 @@ entity UART_TX_BUFFER_FLAG is
         clk             : in  std_logic;
         reset           : in  std_logic;
 
-        --Mux for hvilken data som går igjennom
-        data_in_RX     : in  std_logic_vector(7 downto 0); --Data fra RX
-        data_in_button : in  std_logic_vector(7 downto 0); --Predefinert fra CTRL_ButtonPress
-        switch         : in  std_logic;                    --Switch velger om man tar fra RX eller button
+        data_in     : in  std_logic_vector(7 downto 0); --Data fra CTRL (Enten buttonpress eller loopback)
 
         --Flaggoperasjoner
         set_flag        : in  std_logic;               --Flag at tx er opptatt
@@ -40,29 +37,19 @@ architecture arch_tx_buf_flag of UART_TX_BUFFER_FLAG is
         end if;
     end process;
 
-    process(tx_buf_reg, tx_flag_reg, set_flag, clr_flag, data_in_RX, data_in_button, switch)
+    process(tx_buf_reg, tx_flag_reg, set_flag, clr_flag, data_in)
         begin
         tx_buf_next  <= tx_buf_reg;
         tx_flag_next <= tx_flag_reg;
 
-        --MUX
-        if switch = '0' then
-            --Velger data fra RX
-            if set_flag = '1' then
-                tx_buf_next <= data_in_RX; --Sett utgangsdata til RX
-                tx_flag_next <= '1'; --Sett flagg høyt
-            elsif clr_flag = '1'  then
-                tx_flag_next <= '0';
-            end if;
-        else
-            if set_flag = '1' then
-                tx_buf_next <= data_in_button;
-                tx_flag_next <= '1';
-            elsif clr_flag = '1'  then
-                tx_flag_next <= '0';
-            end if;
+        if set_flag = '1' then
+            tx_buf_next <= data_in;
+            tx_flag_next <= '1';
+        elsif clr_flag = '1'  then
+            tx_flag_next <= '0';
         end if;
     end process;
+    
     data_out <= tx_buf_reg;
     tx_flag <= tx_flag_reg;
 

@@ -10,8 +10,9 @@ entity UART_CTRL is
         reset        : in  std_logic;
         switch       : in  std_logic;                      -- Velger mellom loopback og knappetrykkx
         button_press : in  std_logic;                      -- Knappetrykk
-        rx           : in  std_logic;                      -- Seriell data inn
-        tx           : out std_logic;                      -- Seriell data ut
+        rx           : in  std_logic_vector(7 downto 0);                      -- Seriell data inn
+        tx           : out std_logic_vector(7 downto 0);                      -- Seriell data ut
+        rx_flag      : in std_logic;                       -- Indikerer at RX har mottatt data
         tx_flag      : out std_logic;                      -- Indikerer at TX er opptatt
         set_flag     : in  std_logic;                      -- Flag at tx er opptatt
         clr_flag     : in  std_logic                       -- TX er ferdig, kan motta igjen
@@ -48,7 +49,11 @@ begin
         port map (
         clk             => clk,
         reset           => reset,
-        tx_flag         => tx_flag
+        tx_flag         => tx_flag,
+        set_flag        => set_flag,
+        clr_flag        => clr_flag,
+        data_in_RX     => data_in_RX,
+        data_out     => tx
     );
 
         process(clk, reset)
@@ -70,13 +75,7 @@ process(tx_buf_reg, tx_flag_reg, set_flag, clr_flag, data_in_RX, data_in_button,
 
         --MUX
         if switch = '0' then
-            --Velger loopback
-            if set_flag = '1' then
-                tx_buf_next <= data_in_RX; --Sett utgangsdata til RX
-                tx_flag_next <= '1'; --Sett flagg høyt
-            elsif clr_flag = '1'  then
-                tx_flag_next <= '0';
-            end if;
+           
         else
             if set_flag = '1' then
                 tx_buf_next <= data_in_button;

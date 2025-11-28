@@ -7,8 +7,8 @@ entity UART_CTRL_LOOPBACK is
     port (
         clk        : in  std_logic;                      -- 50 MHz
         reset      : in  std_logic;                      
-        rx         : in  std_logic;                      -- Serriell data inn
-        tx         : out std_logic                      -- Serriell data ut
+        rx         : in  std_logic;                      -- Seriell data inn
+        tx         : out std_logic                      -- Seriell data ut
     );
 end UART_CTRL_LOOPBACK;
 
