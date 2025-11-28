@@ -42,7 +42,7 @@ architecture rtl of UART_CTRL_DISPLAY is
 begin
     process(clk, reset)
     begin
-        if reset = '1' then
+        if reset = '0' then
             HEX0 <= (others => '1');
             HEX1 <= (others => '1');
             HEX2 <= (others => '1');
