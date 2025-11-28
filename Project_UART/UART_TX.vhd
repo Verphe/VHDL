@@ -4,10 +4,7 @@ use ieee.numeric_std.all;
 
 entity UART_TX is
     generic (
-        DATABIT        : integer := 8; --Antall databit
-        START_BIT      : integer := 1; --Antall startbit 
-        STOP_BIT       : integer := 1; --Antall stoppbit
-        TOTAL_BITS     : integer := 10;--Antall bits
+        DATABITS       : integer := 8; --Antall databit
         STOPBIT_TICKS  : integer := 8;  --Antall ticks for stoppbit (8*1)
         OVERSAMPLING   : integer := 8  --Hvor mye oversampling
     );
@@ -15,7 +12,7 @@ entity UART_TX is
         clk             : in  std_logic;               --Systemklokke
         rst             : in  std_logic;               --Reset
         tx_start        : in  std_logic;               --Start sending av data
-        data_in         : in  std_logic_vector(DATABIT-1 downto 0); --Data som skal sendes
+        data_in         : in  std_logic_vector(DATABITS-1 downto 0); --Data som skal sendes
         sample_tick     : in  std_logic;               --Sample tick (8x baud)
         tx              : out std_logic;               --Seriell data ut
         tx_done_tick    : out std_logic                --Data sendt flagg
@@ -27,10 +24,10 @@ architecture arch of UART_TX is
     signal state_reg, state_next : state_type;
 
     --Trenger ikke oversampling i TX, men en enkel teller for baud, men ettersom at vi har brukt 8x oversampling i baudgen, beholder jeg det for enkelhets skyld
-    signal s_reg, s_next : unsigned(2 downto 0);                 --Punktprøvingsteller (0-7)
-    signal n_reg, n_next : unsigned(DATABIT-1 downto 0);         --Databitsteller (0-7)
-    signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
-    signal tx_reg, tx_next: std_logic;                           --Utgangssignal
+    signal s_reg, s_next : unsigned(2 downto 0);                  --Punktprøvingsteller (0-7)
+    signal n_reg, n_next : unsigned(DATABITS-1 downto 0);         --Databitsteller (0-7)
+    signal b_reg, b_next : std_logic_vector(DATABITS-1 downto 0); --Databuffer
+    signal tx_reg, tx_next: std_logic;                            --Utgangssignal
 
     begin
     
@@ -66,14 +63,14 @@ architecture arch of UART_TX is
 
         case state_reg is
             when IDLE =>
-                if tx_start = '1' then
+                if tx_start = '1' and sample_tick = '1' then
                     state_next <= START;
                     s_next <= (others => '0');
                     b_next <= data_in; --Dobbeltsjekk denne pls thanks very much
                 end if;
 
             when START =>
-                if tx_start = '1' then
+                if tx_start = '1' and sample_tick = '1' then
                     tx_next <= '0';
                     if to_integer(s_reg) = OVERSAMPLING-1 then
                         state_next <= DATA;
@@ -83,7 +80,7 @@ architecture arch of UART_TX is
                 end if;
 
             when DATA =>
-                if tx_start = '1' then
+                if tx_start = '1' and sample_tick = '1' then
                     tx_next <= b_reg(0);
                     if to_integer(s_reg) = OVERSAMPLING-1 then
                         s_next <= (others  => '0');
@@ -99,7 +96,7 @@ architecture arch of UART_TX is
                 end if;
 
             when STOP =>
-                if tx_start = '1' then
+                if tx_start = '1' and sample_tick = '1' then
                     tx_next <= '1';
                     if to_integer(s_reg) = STOPBIT_TICKS-1 then
                         state_next <= IDLE;

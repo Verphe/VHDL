@@ -4,19 +4,19 @@ use ieee.numeric_std.all;
 
 entity UART_TX_BUFFER_FLAG is
     generic (
-        DATABITS : in std_logic := 8; --Antall databit
+        DATABITS : integer := 8; --Antall databit
     );
     port (
         clk             : in  std_logic;
         reset           : in  std_logic;
 
         data_in         : in  std_logic_vector(DATABITS-1 downto 0); --Data fra CTRL (Enten buttonpress eller loopback)
-        data_out        : out std_logic_vector(DATABITS-1 downto 0) --Data fra TX buffer til UART TX
+        data_out        : out std_logic_vector(DATABITS-1 downto 0); --Data fra TX buffer til UART TX
 
         --Flaggoperasjoner
         set_flag        : in  std_logic;               --Flag at tx er opptatt
         clr_flag        : in  std_logic;               --TX er ferdig, kan motta igjen
-        tx_flag         : out std_logic;               --Indikerer at TX er opptatt, når TX mottar fra RX, kan RX motta igjen
+        tx_flag         : out std_logic               --Indikerer at TX er opptatt, når TX mottar fra RX, kan RX motta igjen
     );
 end entity UART_TX_BUFFER_FLAG;
 
