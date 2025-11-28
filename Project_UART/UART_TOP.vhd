@@ -11,6 +11,7 @@ entity uart_top is
         data_out_rx     : out std_logic_vector(7 downto 0);  --Mottatt databyte
         data_rdy_rx     : out std_logic;                      --Puls når databyte er klar
         rx_led      : out std_logic;                      --LED pin for mottatt data
+        tx           : out std_logic;                     --UART TX pin 
         HEX0        : out std_logic_vector(7 downto 0);    --Hex displayer
         HEX1        : out std_logic_vector(7 downto 0);     
         HEX2        : out std_logic_vector(7 downto 0)     
@@ -92,4 +93,13 @@ begin
             rx_led      => rx_led
         );
 
+        --Loopback kontroller
+        UART_loopback_inst : entity work.UART_CTRL_LOOPBACK
+        port map (
+            clk   => clk,
+            reset => reset,
+            rx    => rx,
+            tx    => tx  
+        );
+        
 end arch;
