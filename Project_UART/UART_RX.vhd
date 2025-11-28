@@ -12,7 +12,7 @@ entity UART_RX is
     );
     port (
         clk            : in  std_logic;               --Systemklokke
-        reset            : in  std_logic;               --Reset
+        reset          : in  std_logic;               --Reset
         rx             : in  std_logic;               --Serriell data inn
         sample_tick    : in  std_logic;               --Sample tick (8x baud)
         rx_done_tick   : out std_logic;               --Data mottatt flagg

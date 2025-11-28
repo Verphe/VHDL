@@ -23,15 +23,42 @@ architecture rtl of UART_CTRL_LOOPBACK is
     signal tx_byte  : std_logic_vector(7 downto 0);
     signal tx_done  : std_logic;
 
+
+
 begin
-    UART_RX_INST : entity work.uart_rx_top
+    UART_RX_INST : entity work.UART_RX
         port map (
             clk      => clk,
             reset    => reset,
             rx       => rx,
             data_out => rx_data,
-            data_rdy => rx_done,
-            rx_led   => open,
-            HEX0     => open,
-            HEX1     => open
+            rx_done_tick => rx_done
         );
+    
+    UART_TX_INST : entity work.UART_TX
+        port map (
+            clk        => clk,
+            reset      => reset,
+            tx_start   => tx_start,
+            tx_byte    => tx_byte,
+            tx         => tx,
+            tx_done_tick    => tx_done
+
+        );  
+        
+    --Loopback kontroll
+    process(clk, reset)
+    begin
+        if reset = '1' then
+            tx_start <= '0';
+            tx_byte  <= (others => '0');
+        elsif rising_edge(clk) then
+            if rx_done = '1' then
+                tx_start <= '1';          --Start sending
+                tx_byte  <= rx_data;     --Sett byte til mottatt data
+            else
+                tx_start <= '0';         --Hold sendepuls lav
+            end if;
+        end if;
+    end process;
+end architecture rtl;
