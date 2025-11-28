@@ -40,3 +40,10 @@ begin
     end process;
 
 end rtl;
+
+-- SEND "A" (TX_Flag = 1)
+--Vent på clear for å sende neste byte (TX_Flag = 0)
+--Send "B"(TX_Flag = 1)
+--Vent på clear for å sende neste byte (Tx_Flag = 0)
+--osv.
+--Hva om vi sender \n etter siste byte? 
