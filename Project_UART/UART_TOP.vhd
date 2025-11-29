@@ -9,7 +9,8 @@ entity uart_top is
         reset       : in  std_logic;                     --Reset
         rx          : in  std_logic;                     --UART RX pin
         rx_led      : out std_logic;                      --LED pin for mottatt data
-        tx          : out std_logic;                     --UART TX pin 
+        tx          : out std_logic;                     --UART TX pin
+        ctrl_sw     : in  std_logic;                     --Switch for å velge mellom loopback og knappetrykk
         HEX0        : out std_logic_vector(7 downto 0);    --Hex displayer
         HEX1        : out std_logic_vector(7 downto 0);     
         HEX2        : out std_logic_vector(7 downto 0)     
