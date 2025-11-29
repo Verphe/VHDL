@@ -105,15 +105,6 @@ begin
             rx_led      => rx_led
         );
 
-        -- --Loopback kontroller
-        -- UART_loopback_inst : entity work.UART_CTRL_LOOPBACK
-        -- port map (
-        --     clk   => clk,
-        --     reset => reset,
-        --     rx    => rx,
-        --     tx    => tx  
-        -- );
-
         UART_tx_inst : entity work.UART_TX
         port map (
             clk => clk,
