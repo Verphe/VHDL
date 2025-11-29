@@ -114,6 +114,9 @@ begin
         --     tx    => tx  
         -- );
 
+        UART_ctrl_inst : entity work.UART_CTRL
+        
+
         UART_tx_inst : entity work.UART_TX
         port map (
             clk => clk,
