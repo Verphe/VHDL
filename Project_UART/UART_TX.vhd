@@ -76,37 +76,37 @@ architecture arch of UART_TX is
             when START =>
                 if tx_start = '1' and sample_tick = '1' then
                     tx_next <= '0';
-                    if to_integer(s_reg) = OVERSAMPLING-1 then
+                    if to_integer(unsigned(s_reg)) = OVERSAMPLING-1 then
                         state_next <= DATA;
                     else
-                        s_next <= s_reg + 1;
+                        s_next <= std_logic_vector(unsigned(s_reg) + 1);
                     end if;
                 end if;
 
             when DATA =>
                 if tx_start = '1' and sample_tick = '1' then
                     tx_next <= b_reg(0);
-                    if to_integer(s_reg) = OVERSAMPLING-1 then
+                    if to_integer(unsigned(s_reg)) = OVERSAMPLING-1 then
                         s_next <= (others  => '0');
                         b_next <= '0' & b_reg(DATABITS-1 downto 1);
-                        if (n_reg = DATABITS-1) then
+                        if to_integer(unsigned(n_reg)) = DATABITS-1 then
                             state_next <= STOP;
                         else
-                            n_next <= n_reg + 1;
+                            n_next <= std_logic_vector(unsigned(n_reg) + 1);
                         end if;
                     else
-                        s_next <= s_reg + 1;
+                        s_next <= std_logic_vector(unsigned(s_reg) + 1);
                     end if;
                 end if;
 
             when STOP =>
                 if tx_start = '1' and sample_tick = '1' then
                     tx_next <= '1';
-                    if to_integer(s_reg) = STOPBIT_TICKS-1 then
+                    if to_integer(unsigned(s_reg)) = STOPBIT_TICKS-1 then
                         state_next <= IDLE;
                         tx_flag_next <= '1';
                     else
-                        s_next <= s_reg + 1;
+                        s_next <= std_logic_vector(unsigned(s_reg) + 1);
                     end if;
                 end if;
         end case;
