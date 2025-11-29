@@ -24,8 +24,8 @@ architecture arch of UART_TX is
     signal state_reg, state_next : state_type;
 
     --Trenger ikke oversampling i TX, men en enkel teller for baud, men ettersom at vi har brukt 8x oversampling i baudgen, beholder jeg det for enkelhets skyld
-    signal s_reg, s_next : std_logic_vector(2 downto 0);         --Punktprøvingsteller (0-7)
-    signal n_reg, n_next : std_logic_vector(2 downto 0);         --Databitsteller (0-7)
+    signal s_reg, s_next : unsigned(2 downto 0);         --Punktprøvingsteller (0-7)
+    signal n_reg, n_next : unsigned(2 downto 0);         --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABITS-1 downto 0); --Databuffer
     signal tx_reg, tx_next: std_logic;                            --Utgangssignal
     signal tx_flag_reg, tx_flag_next : std_logic;                 --Flagg for å si ifra at TX er ferdig
