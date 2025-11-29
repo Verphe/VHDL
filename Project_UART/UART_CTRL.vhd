@@ -10,12 +10,16 @@ entity UART_CTRL is
         reset        : in  std_logic;
 
         --Analog styring
-        switch       : in  std_logic;                      -- Velger mellom loopback og knappetrykkx
-        button_press : in  std_logic;                      -- Knappetrykk
+        switch          : in  std_logic;                      -- Velger mellom loopback og knappetrykkx
+        baud_switch     : in  std_logic;  --Bytter mellom 9600 eller byttbar 
+        button_press    : in  std_logic;                      -- Knappetrykk
+        button_baud_sel : in  std_logic; -- Velger baud rate (2^4 forskjellige)
+        baud_limit      : out unsigned(9 downto 0); --Outputverdi til baudgenerator
 
         --Data
         rx_data           : in  std_logic_vector(7 downto 0);   -- Seriell data inn
         tx_data           : out std_logic_vector(7 downto 0);   -- Seriell data ut
+
 
         --Flagg
         rx_flag      : in  std_logic;                       -- TX er ferdig, kan motta igjen
@@ -43,6 +47,8 @@ architecture rtl of UART_CTRL is
     signal sending : std_logic := '0';
 
     --constant FIXED_BYTE : std_logic_vector(7 downto 0) := b"01000011";
+
+    signal baud_select : integer range 1 to 10; --10 forskjellige baud rates
 
     signal tx_buf_reg     : std_logic_vector(7 downto 0);
     signal tx_buf_next    : std_logic_vector(7 downto 0);
@@ -74,6 +80,16 @@ begin
             tx_flag_reg  <= tx_flag_next;
             rx_clr_reg <= rx_clr_next;
 
+            --Bytter baudrate om vi har på variabel baudrate
+            if baud_switch = '1' then
+                if button_baud_sel = '1' then
+                    if baud_select = 10 then
+                        baud_select <= 1;
+                    else
+                        baud_select <= baud_select + 1;
+                    end if;
+                end if;
+            end if;
 
             button_prev <= button_press; --Hvis man holder inne så vil ikke 'H' bli sendt uendelig
 
@@ -131,6 +147,35 @@ begin
             end if;
 
         end if;
+    end process;
+
+    process(baud_select)
+    begin
+        case baud_select is
+            when 1 =>
+                baud_limit <= to_unsigned(62, 10); -- 100kbit/s
+            when 2 =>
+                baud_limit <= to_unsigned(31, 10); -- 200kbit/s
+            when 3 =>
+                baud_limit <= to_unsigned(20, 10); -- 300kbit/s
+            when 4 =>
+                baud_limit <= to_unsigned(15, 10); -- 400kbit/s
+            when 5 =>
+                baud_limit <= to_unsigned(12, 10); -- 500kbit/s
+            when 6 =>
+                baud_limit <= to_unsigned(10, 10); -- 600kbit/s
+            when 7 =>
+                baud_limit <= to_unsigned(8, 10);  -- 700kbit/s
+            when 8 =>
+                baud_limit <= to_unsigned(7, 10);  -- 800kbit/s
+            when 9 =>
+                baud_limit <= to_unsigned(6, 10);  -- 900kbit/s
+            when 10 =>
+                baud_limit <= to_unsigned(5, 10);  -- 1Mbit/s
+            when others =>
+                baud_limit <= to_unsigned(651, 10); -- Default til 9600
+            
+        end case;
     end process;
 
 

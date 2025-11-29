@@ -1,20 +1,23 @@
 library ieee;
 use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
 
 library work;
 
 entity uart_top is
     port (
-        clk         : in  std_logic;                     --Systemklokke (50MHz)
-        reset       : in  std_logic;                     --Reset
-        rx          : in  std_logic;                     --UART RX pin
-        rx_led      : out std_logic;                      --LED pin for mottatt data
-        tx          : out std_logic;                     --UART TX pin
-        ctrl_sw     : in  std_logic;                     --Switch for å velge mellom loopback og knappetrykk
-        ctrl_btn    : in  std_logic;                     --Knappetrykk for å sende data
-        HEX0        : out std_logic_vector(7 downto 0);    --Hex displayer
-        HEX1        : out std_logic_vector(7 downto 0);     
-        HEX2        : out std_logic_vector(7 downto 0)     
+        clk             : in  std_logic;                     --Systemklokke (50MHz)
+        reset           : in  std_logic;                     --Reset
+        rx              : in  std_logic;                     --UART RX pin
+        rx_led          : out std_logic;                     --LED pin for mottatt data
+        tx              : out std_logic;                     --UART TX pin
+        ctrl_sw         : in  std_logic;                     --Switch for å velge mellom loopback og knappetrykk
+        ctrl_btn        : in  std_logic;                     --Knappetrykk for å sende data
+        baud_switch     : in  std_logic;                     --Switch for å velge mellom fast 9600 baud eller byttbar baudrate
+        button_baud_sel : in  std_logic;                     --Knapp for å bytte baudrate når byttbar baud er valgt
+        HEX0            : out std_logic_vector(7 downto 0);  --Hex displayer
+        HEX1            : out std_logic_vector(7 downto 0);     
+        HEX2            : out std_logic_vector(7 downto 0)     
     );
 end uart_top;
 
@@ -34,10 +37,11 @@ architecture arch of uart_top is
 
     
     --CTRL-signaler
-    signal data_from_rx_to_ctrl : std_logic_vector(7 downto 0);
-    signal data_from_ctrl_to_tx : std_logic_vector(7 downto 0);
+    signal data_from_rx_to_ctrl     : std_logic_vector(7 downto 0);
+    signal data_from_ctrl_to_tx     : std_logic_vector(7 downto 0);
     signal set_flag_from_ctrl_to_tx : std_logic;
     signal clr_flag_from_ctrl_to_rx : std_logic;
+    signal baud_limit_from_ctrl     : unsigned(9 downto 0);
 
 begin
     --Baud generator
@@ -51,8 +55,8 @@ begin
         port map (
             clk        => clk,
             reset      => reset,
-            max_tick   => sample_tick --Brukes som sample tick
-            --q          => q_count --Igjen, kan brukes
+            max_tick   => sample_tick, --Brukes som sample tick
+            baud_limit => baud_limit_from_ctrl
         );
     
     
@@ -107,16 +111,19 @@ begin
 
         UART_ctrl_inst : entity work.UART_CTRL
         port map(
-            clk          => clk,
-            reset        => reset,
-            switch       => ctrl_sw,
-            button_press => ctrl_btn,
-            rx_data      => data_from_rx_to_ctrl,
-            tx_data      => data_from_ctrl_to_tx,
-            rx_flag      => rx_flag_from_rx_to_ctrl,
-            tx_flag      => tx_buf_flag_start,
-            tx_set_flag  => set_flag_from_ctrl_to_tx,
-            rx_clr_flag  => clr_flag_from_ctrl_to_rx
+            clk             => clk,
+            reset           => reset,
+            switch          => ctrl_sw,
+            button_press    => ctrl_btn,
+            tx_data         => data_from_ctrl_to_tx,
+            rx_data         => data_from_rx_to_ctrl,
+            rx_flag         => rx_flag_from_rx_to_ctrl,
+            tx_flag         => tx_buf_flag_start,
+            tx_set_flag     => set_flag_from_ctrl_to_tx,
+            rx_clr_flag     => clr_flag_from_ctrl_to_rx,
+            baud_switch     => baud_switch,
+            button_baud_sel => button_baud_sel,
+            baud_limit      => baud_limit_from_ctrl
         );
         UART_tx_inst : entity work.UART_TX
         port map (
