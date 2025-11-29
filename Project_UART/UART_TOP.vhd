@@ -38,7 +38,6 @@ architecture arch of uart_top is
     signal data_from_ctrl_to_tx : std_logic_vector(7 downto 0);
     signal set_flag_from_ctrl_to_tx : std_logic;
     signal clr_flag_from_ctrl_to_rx : std_logic;
-    signal rx_buffer_flag_out_to_ledready : std_logic;
 
 begin
     --Baud generator
@@ -83,7 +82,7 @@ begin
             set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
             data_out  => data_from_rx_to_ctrl, --Data utgang
-            flag_out  => open --Ikke bruk flagg utgang
+            flag_out  => rx_flag_from_rx_to_ctrl 
         );
     --Kontroller for display
        uart_display_inst : entity work.UART_CTRL_DISPLAY
@@ -100,10 +99,10 @@ begin
         --Leadready kontroller
         UART_ledready_inst : entity work.UART_CTRL_LEDREADY
         port map (
-            clk         => clk,
-            reset       => reset,
-            rx_done_tick => rx_flag_from_rx_to_ctrl,
-            rx_led      => rx_led
+            clk          => clk,
+            reset        => reset,
+            rx_done_tick =>rx_flag_from_rx_to_ctrl,
+            rx_led       => rx_led
         );
 
         UART_ctrl_inst : entity work.UART_CTRL
