@@ -22,39 +22,29 @@ end entity UART_TX_BUFFER_FLAG;
 
 architecture arch_tx_buf_flag of UART_TX_BUFFER_FLAG is
 
-    signal tx_buf_reg     : std_logic_vector(DATABITS-1 downto 0);
-    signal tx_buf_next    : std_logic_vector(DATABITS-1 downto 0);
-
-    signal tx_flag_reg, tx_flag_next : std_logic; --Utgangsflagg
+    signal tx_buf_reg  : std_logic_vector(DATABITS-1 downto 0);
+    signal tx_flag_reg : std_logic;
 
     begin
 
     process(clk, reset)
     begin
         if reset = '1' then
-            tx_buf_reg   <= (others => '0');
-            tx_flag_reg  <= '0';
+            tx_buf_reg  <= (others => '0');
+            tx_flag_reg <= '0';
         elsif rising_edge(clk) then
-            tx_buf_reg   <= tx_buf_next;
-            tx_flag_reg  <= tx_flag_next;
+            if set_flag = '1' then
+                tx_buf_reg  <= data_in;
+                tx_flag_reg <= '1';
+            elsif clr_flag = '1' then
+                tx_flag_reg <= '0';
+            end if;
         end if;
     end process;
 
-    process(tx_buf_reg, tx_flag_reg, set_flag, clr_flag, data_in)
-    begin
-    tx_buf_next  <= tx_buf_reg;
-    tx_flag_next <= tx_flag_reg;
-
-    if set_flag = '1' then
-        tx_buf_next <= data_in;
-        tx_flag_next <= '1';
-    elsif clr_flag = '1'  then
-        tx_flag_next <= '0';
-    end if;
-    end process;
-    
+    -- Outputs
     data_out <= tx_buf_reg;
-    tx_flag <= tx_flag_reg;
+    tx_flag  <= tx_flag_reg;
 
 end architecture arch_tx_buf_flag;
 
