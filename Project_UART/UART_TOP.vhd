@@ -78,7 +78,7 @@ begin
         port map (
             clk       => clk,
             reset     => reset,
-            clr_flag  => clr_flag_from_ctrl_to_rx, --Ikke bruk klar flagg
+            clr_flag  => clr_flag_from_ctrl_to_rx, 
             set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
             data_out  => save_byte_to_display, --Data utgang
