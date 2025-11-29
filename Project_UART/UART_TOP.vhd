@@ -23,6 +23,7 @@ architecture arch of uart_top is
     
     --RX-signaler
     signal rx_done_tick_to_setflag : std_logic;
+    signal rx_flag_from_rx_to_ctrl : std_logic;
     signal rx_data_to_save_byte : std_logic_vector(7 downto 0);
 
     --TX-signaler
@@ -33,7 +34,7 @@ architecture arch of uart_top is
 
     
     --CTRL-signaler
-    signal save_byte_to_display : std_logic_vector(7 downto 0);
+    signal data_from_rx_to_ctrl : std_logic_vector(7 downto 0);
     signal data_from_ctrl_to_tx : std_logic_vector(7 downto 0);
     signal set_flag_from_ctrl_to_tx : std_logic;
     signal clr_flag_from_ctrl_to_rx : std_logic;
@@ -80,7 +81,7 @@ begin
             clr_flag  => clr_flag_from_ctrl_to_rx, --Ikke bruk klar flagg
             set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
-            data_out  => save_byte_to_display, --Data utgang
+            data_out  => data_from_rx_to_ctrl, --Data utgang
             flag_out  => open --Ikke bruk flagg utgang
         );
     --Kontroller for display
@@ -88,7 +89,7 @@ begin
         port map (
             clk        => clk,
             reset      => reset,
-            data_in    => save_byte_to_display,
+            data_in    => rx_flag_from_rx_to_ctrl,
             -- data_ready => data_rdy,
             HEX0       => HEX0,
             HEX1       => HEX1,
@@ -97,19 +98,26 @@ begin
 
         --Leadready kontroller
         UART_ledready_inst : entity work.UART_CTRL_LEDREADY
-        generic map (
-            LED_CLKS => 100000000 --2 sekunder ved 50MHz
-        )
         port map (
             clk         => clk,
             reset       => reset,
-            rx_done_tick => rx_done_tick_to_setflag,
+            rx_done_tick => rx_flag_from_rx_to_ctrl,
             rx_led      => rx_led
         );
 
         UART_ctrl_inst : entity work.UART_CTRL
-        
-
+        port map(
+            clk          => clk,
+            reset        => reset,
+            switch       => ctrl_sw,
+            button_press => ctrl_btn,
+            rx_data      => data_from_rx_to_ctrl,
+            tx_data      => data_from_ctrl_to_tx,
+            rx_flag      => rx_flag_from_rx_to_ctrl,
+            tx_flag      => tx_buf_flag_start,
+            tx_set_flag  => set_flag_from_ctrl_to_tx,
+            rx_clr_flag  => clr_flag_from_ctrl_to_rx
+        );
         UART_tx_inst : entity work.UART_TX
         port map (
             clk => clk,
