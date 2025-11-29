@@ -38,6 +38,7 @@ architecture arch of uart_top is
     signal data_from_ctrl_to_tx : std_logic_vector(7 downto 0);
     signal set_flag_from_ctrl_to_tx : std_logic;
     signal clr_flag_from_ctrl_to_rx : std_logic;
+    signal rx_buffer_flag_out_to_ledready : std_logic;
 
 begin
     --Baud generator
@@ -74,11 +75,11 @@ begin
         );
 
     -- Lagring av mottatt byte
-    uart_rx_save_byte_inst : entity work.flag_buff  
+    uart_rx_buffer_inst : entity work.flag_buff  
         port map (
             clk       => clk,
             reset     => reset,
-            clr_flag  => clr_flag_from_ctrl_to_rx, --Ikke bruk klar flagg
+            clr_flag  => clr_flag_from_ctrl_to_rx, 
             set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
             data_out  => data_from_rx_to_ctrl, --Data utgang
