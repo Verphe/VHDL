@@ -101,7 +101,7 @@ begin
         port map (
             clk          => clk,
             reset        => reset,
-            rx_done_tick =>rx_flag_from_rx_to_ctrl,
+            rx_done_tick => rx_done_tick_to_setflag,
             rx_led       => rx_led
         );
 

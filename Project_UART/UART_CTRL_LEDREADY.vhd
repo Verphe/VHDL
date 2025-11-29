@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 
 entity UART_CTRL_LEDREADY is
     generic (
-        LED_CLKS       : integer := 100000000 --Klokkesyklus for LED blink (2 sekunder på 50MHz)
+        LED_CLKS       : integer := 25000000 --Klokkesyklus for LED blink (0.5 sekunder på 50MHz)
     );
     port (
         clk          : in  std_logic;  --50 MHz
