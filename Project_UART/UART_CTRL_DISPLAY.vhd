@@ -7,11 +7,10 @@ entity UART_CTRL_DISPLAY is
     port (
         clk            : in  std_logic;                      -- 50 MHz
         reset          : in  std_logic;
-        --data_ready     : in  std_logic;
         data_in        : in  std_logic_vector(7 downto 0);   -- Mottatt byte
-        HEX0           : out std_logic_vector(7 downto 0);   
-        HEX1           : out std_logic_vector(7 downto 0);
-        HEX2           : out std_logic_vector(7 downto 0)
+        HEX0           : out std_logic_vector(7 downto 0);   -- 7-segment display enhet 0
+        HEX1           : out std_logic_vector(7 downto 0);   -- 7-segment display enhet 1
+        HEX2           : out std_logic_vector(7 downto 0)    -- 7-segment display enhet 2
     );
 end UART_CTRL_DISPLAY;
 
