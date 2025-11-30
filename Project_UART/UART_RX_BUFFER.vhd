@@ -6,10 +6,10 @@ use ieee.numeric_std.all;
 entity flag_buff is
     port(
         clk, reset : in std_logic; --Systemklokke og reset
-        clr_flag, set_flag : in std_logic; --Kontrollsignaler for flagg
+        set_flag : in std_logic; --Kontrollsignaler for flagg
         data_in : in std_logic_vector(7 downto 0); --Data inngang
         data_out : out std_logic_vector(7 downto 0); --Data utgang
-        flag_out : out std_logic --Flagg utgang
+        rx_done : out std_logic --Flagg utgang
     );
 end entity flag_buff;
 
@@ -37,12 +37,10 @@ architecture arch of flag_buff is
         flag_next <= flag_reg; --Standard hold verdi
         if (set_flag = '1') then
             buf_next <= data_in; --Sett buffer til data inngang
-            flag_next <= '1'; --Sett flagg
-        elsif (clr_flag = '1') then
-            flag_next <= '0'; --Klarer flagg
+            flag_next <= set_flag; --Send flagg videre
         end if;
     end process;
     data_out <= buf_reg; --Koble buffer register til data utgang
-    flag_out <= flag_reg; --Koble flagg register til flagg utgang
+    rx_done <= flag_reg; --Koble flagg register til flagg utgang
 
     end architecture arch;

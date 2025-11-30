@@ -7,7 +7,6 @@ use ieee.numeric_std.all;
 entity UART_RX is
     generic (
         DATABIT        : integer := 8; --Antall databit
-        DBIT_IN_BINARY : integer := 3; --Maks antall databit i binær [1 1 1] = 8
         STOPBIT_TICKS  : integer := 8;  --Antall ticks for stoppbit (8*1)
         OVERSAMPLING   : integer := 8  --Hvor mye oversampling
     );
@@ -31,6 +30,7 @@ architecture arch of UART_RX is
     signal n_reg, n_next : unsigned(2 downto 0);  --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
     signal p_reg, p_next : unsigned(2 downto 0); --Paritetsbitteller
+    signal sample_count_reg, sample_count_next : unsigned(2 downto 0);
     begin 
     
     --Tilstandsmaskin og register
@@ -43,6 +43,7 @@ architecture arch of UART_RX is
             n_reg <= (others => '0'); --Reset databiteller
             b_reg <= (others => '0'); --Reset databuffer
             p_reg <= (others => '0'); --Reset paritetsbitteller
+            sample_count_reg <= (others => '0');
         
         elsif rising_edge(clk) then
             state_reg <= state_next;
@@ -50,6 +51,7 @@ architecture arch of UART_RX is
             n_reg <= n_next; --Databiteller oppdatering
             b_reg <= b_next; --Databuffer oppdatering
             p_reg <= p_next; --Paritetsbitteller oppdatering
+            sample_count_reg <= sample_count_next;
         end if;
     end process;
 
@@ -64,6 +66,7 @@ architecture arch of UART_RX is
         n_next <= n_reg;
         b_next <= b_reg;
         p_next <= p_reg;
+        sample_count_next <= sample_count_reg;
         rx_done_tick <= '0';
 
         case state_reg is
@@ -161,6 +164,7 @@ architecture arch of UART_RX is
                             s_next <= s_reg + 1; --Tell flere punkter
                         end if;
                     end if;
+                end if;
         end case;
     end process;
 

@@ -41,7 +41,6 @@ architecture arch of uart_top is
     signal data_from_rx_to_ctrl     : std_logic_vector(7 downto 0);
     signal data_from_ctrl_to_tx     : std_logic_vector(7 downto 0);
     signal set_flag_from_ctrl_to_tx : std_logic;
-    signal clr_flag_from_ctrl_to_rx : std_logic;
     signal baud_limit_from_ctrl     : unsigned(9 downto 0);
     signal parity_value_from_ctrl   : unsigned(1 downto 0);
 
@@ -67,7 +66,6 @@ begin
     uart_rx_inst : entity work.UART_RX
         generic map (
             DATABIT        => 8, --Antall databit
-            DBIT_IN_BINARY => 3, --Maks antall databit i binær [1 1 1] = 8
             STOPBIT_TICKS  => 8  --Antall ticks for stoppbit (8*1)
         )
         port map (
@@ -85,11 +83,10 @@ begin
         port map (
             clk       => clk,
             reset     => reset,
-            clr_flag  => clr_flag_from_ctrl_to_rx, 
             set_flag  => rx_done_tick_to_setflag, --Sett flagg når data er mottatt
             data_in   => rx_data_to_save_byte, --Data inngang fra UART RX
             data_out  => data_from_rx_to_ctrl, --Data utgang
-            flag_out  => rx_flag_from_rx_to_ctrl 
+            rx_done   => rx_flag_from_rx_to_ctrl 
         );
     --Kontroller for display
        uart_display_inst : entity work.UART_CTRL_DISPLAY
@@ -121,9 +118,7 @@ begin
             tx_data         => data_from_ctrl_to_tx,
             rx_data         => data_from_rx_to_ctrl,
             rx_flag         => rx_flag_from_rx_to_ctrl,
-            tx_flag         => tx_buf_flag_start,
             tx_set_flag     => set_flag_from_ctrl_to_tx,
-            rx_clr_flag     => clr_flag_from_ctrl_to_rx,
             baud_switch     => baud_switch,
             button_baud_sel => button_baud_sel,
             baud_limit      => baud_limit_from_ctrl,

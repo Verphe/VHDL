@@ -30,7 +30,7 @@ architecture arch of UART_TX is
     signal b_reg, b_next : std_logic_vector(DATABITS-1 downto 0); --Databuffer
     signal tx_reg, tx_next: std_logic;                            --Utgangssignal
     signal tx_flag_reg, tx_flag_next : std_logic;                 --Flagg for å si ifra at TX er ferdig
-    signal p_reg, p_next : unsigned(2 downto 0);                             --Paritetsbit register
+    signal p_reg, p_next : unsigned(2 downto 0);                  --Paritetsbit register
 
     begin
     
@@ -94,11 +94,11 @@ architecture arch of UART_TX is
             when DATA =>
                 tx_next <= b_reg(0);
 
-                if b_reg(0) = '1' then
-                    p_next <= p_reg + 1; --Teller antall 1'er for paritet
-                end if;
                 if sample_tick = '1' then
                     if s_reg = OVERSAMPLING-1 then
+                        if b_reg(0) = '1' then
+                            p_next <= p_reg + 1; --Teller antall 1'er for paritet
+                        end if;
                         s_next <= (others  => '0');
                         b_next <= '0' & b_reg(DATABITS-1 downto 1);
                         if n_reg = DATABITS-1 then
