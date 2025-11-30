@@ -31,6 +31,7 @@ architecture arch of UART_RX is
     signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
     signal p_reg, p_next : unsigned(2 downto 0); --Paritetsbitteller
     signal sample_count_reg, sample_count_next : unsigned(2 downto 0);
+    signal p_flag        : std_logic; --Paritetsfeil flagg
     begin 
     
     --Tilstandsmaskin og register
@@ -43,6 +44,7 @@ architecture arch of UART_RX is
             n_reg <= (others => '0'); --Reset databiteller
             b_reg <= (others => '0'); --Reset databuffer
             p_reg <= (others => '0'); --Reset paritetsbitteller
+            p_flag <= '0';
             sample_count_reg <= (others => '0');
         
         elsif rising_edge(clk) then
@@ -68,6 +70,7 @@ architecture arch of UART_RX is
         p_next <= p_reg;
         sample_count_next <= sample_count_reg;
         rx_done_tick <= '0';
+        p_flag <= '0';
 
         case state_reg is
             when IDLE => --Vent på startbit
@@ -91,7 +94,7 @@ architecture arch of UART_RX is
             
             when DATA => --Sjekk databit
                 if sample_tick = '1' then --Dersom baud-tick er 1
-                    if to_integer(s_reg) = (DATABIT-1) then --OG dersom databitten er registrert på midten
+                    if to_integer(s_reg) = (OVERSAMPLING-1) then --OG dersom databitten er registrert på midten
                         s_next <= (others => '0'); --Reset punktteller
 
                         if rx = '1' then --Legg til antall 1ere
@@ -121,13 +124,18 @@ architecture arch of UART_RX is
                                         state_next <= STOP;
                                     else
                                         state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                        p_reg <= (others => '0');
+                                        p_flag <= '1';
                                     end if;
                                 elsif parity_value = "01" then
                                     if rx = '0' then
                                         state_next <= STOP;
                                     else
                                         state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                        p_reg <= (others => '0');
+                                        p_flag <= '1';
                                     end if;
+                                    p_reg <= (others => '0');
                                 end if;
                             else
                                 if parity_value = "10" then
@@ -135,13 +143,19 @@ architecture arch of UART_RX is
                                         state_next <= STOP;
                                     else
                                         state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                        p_reg <= (others => '0');
+                                        p_flag <= '1';
                                     end if;
+                                    p_reg <= (others => '0');
                                 elsif parity_value = "01" then
                                     if rx = '1' then
                                         state_next <= STOP;
                                     else
                                         state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                        p_reg <= (others => '0');
+                                        p_flag <= '1';
                                     end if;
+                                    p_reg <= (others => '0');
                                 end if;
                             end if;
                         else
