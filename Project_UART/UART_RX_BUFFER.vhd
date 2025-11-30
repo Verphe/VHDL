@@ -31,7 +31,7 @@ architecture arch of flag_buff is
         end if;
     end process;
 
-    process(buf_reg, flag_reg, clr_flag, set_flag, data_in)
+    process(buf_reg, flag_reg,  set_flag, data_in)
         begin
         buf_next <= buf_reg; --Standard hold verdi
         flag_next <= flag_reg; --Standard hold verdi
