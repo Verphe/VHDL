@@ -20,7 +20,7 @@ entity UART_TX is
 end UART_TX;
 
 architecture arch of UART_TX is
-    type state_type is (IDLE, START, DATA, STOP); --Samme tilstander som i RX
+    type state_type is (IDLE, START, DATA, STOP, PARITY); --Samme tilstander som i RX
     signal state_reg, state_next : state_type;
 
     --Trenger ikke oversampling i TX, men en enkel teller for baud, men ettersom at vi har brukt 8x oversampling i baudgen, beholder jeg det for enkelhets skyld
@@ -29,6 +29,7 @@ architecture arch of UART_TX is
     signal b_reg, b_next : std_logic_vector(DATABITS-1 downto 0); --Databuffer
     signal tx_reg, tx_next: std_logic;                            --Utgangssignal
     signal tx_flag_reg, tx_flag_next : std_logic;                 --Flagg for å si ifra at TX er ferdig
+    signal p_reg, p_next : unsigned(2 downto 0);                             --Paritetsbit register
 
     begin
     
@@ -40,6 +41,7 @@ architecture arch of UART_TX is
             s_reg <= (others => '0'); --Reset punktprøvingsteller 
             n_reg <= (others => '0'); --Reset databiteller
             b_reg <= (others => '0'); --Reset databuffer
+            p_reg <= (others => '0'); --Reset paritetsbitteller
             tx_reg <= '1'; --Sett TX høy
             tx_flag_reg <= '0'; --Sett tx_done lav
         
@@ -48,6 +50,7 @@ architecture arch of UART_TX is
             s_reg <= s_next; --Punktprøvingsteller oppdatering
             n_reg <= n_next; --Databiteller oppdatering
             b_reg <= b_next; --Databuffer oppdatering
+            p_reg <= p_next; --Paritetsbitteller oppdatering
             tx_reg <= tx_next; --TX oppdatering
             tx_flag_reg <= tx_flag_next;
         end if;
@@ -60,6 +63,7 @@ architecture arch of UART_TX is
         s_next <= s_reg;
         n_next <= n_reg;
         b_next <= b_reg;
+        p_next <= p_reg;
         tx_next <= tx_reg;
         state_next <= state_reg;
         tx_flag_next <= '0';
@@ -69,8 +73,9 @@ architecture arch of UART_TX is
                 if tx_start = '1' and sample_tick = '1' then
                     state_next <= START;
                     s_next <= (others => '0');
-                    b_next <= data_in; --Dobbeltsjekk denne pls thanks very much
+                    b_next <= data_in; 
                     n_next <= (others => '0');
+                    p_next <= (others => '0');
                 end if;
 
             when START =>
@@ -87,6 +92,10 @@ architecture arch of UART_TX is
 
             when DATA =>
                 tx_next <= b_reg(0);
+
+                if b_reg(0) = '1' then
+                    p_next <= p_reg + 1; --Teller antall 1'er for paritet
+                end if;
                 if sample_tick = '1' then
                     if s_reg = OVERSAMPLING-1 then
                         s_next <= (others  => '0');
@@ -100,6 +109,13 @@ architecture arch of UART_TX is
                         s_next <= s_reg + 1;
                     end if;
                 end if;
+            
+            when PARITY =>
+                if p_reg mod 2 = 0 then
+                    tx_next <= '0'; --Sender 0 for partitet
+                else
+                    tx_next <= '1'; --Sender 1 for partitet
+                end if;    
 
             when STOP =>
                 tx_next <= '1';
