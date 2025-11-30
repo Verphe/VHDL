@@ -1,3 +1,8 @@
+
+--Det er tatt inspirasjon fra en kodepresentasjon fra
+--Electrical and Computer Engineering Department, University of New Mexico
+--https://ece-research.unm.edu/jimp/vhdl_fpgas/slides/UART.pdf
+
 --Inkluder bibliotek
 
 library ieee;

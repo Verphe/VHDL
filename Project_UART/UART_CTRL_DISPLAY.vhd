@@ -1,3 +1,11 @@
+--Det er tatt inspirasjon fra en kodepresentasjon fra
+--Electrical and Computer Engineering Department, University of New Mexico
+--https://ece-research.unm.edu/jimp/vhdl_fpgas/slides/UART.pdf
+
+
+--Her er det også tatt inspirasjon fra 7-segment-display-kode fra Githubsiden til Octaviocmaciel:
+--https://github.com/otaviocmaciel/7-segment-VHDL
+
 -- Inkluderer biblioteker
 library ieee;
 use ieee.std_logic_1164.all;
