@@ -28,7 +28,6 @@ entity UART_CTRL is
 
         --Flagg
         rx_flag      : in  std_logic;                       -- TX er ferdig, kan motta igjen
-        tx_flag      : in  std_logic;                      -- Indikerer at TX er opptatt
         tx_set_flag  : out std_logic;                      -- Flag at tx er opptatt
         rx_clr_flag  : out std_logic                       -- Indikerer at RX har mottatt data
     );
@@ -127,7 +126,7 @@ begin
                 end if;
             end if;
 				
-            if sending = '1' and tx_flag_next = '1' and tx_flag = '0' then
+            if sending = '1' and tx_flag_next = '1'  then
                 if index < 7 then
                     index <= index + 1;
                     gap_cnt <= 20; -- Bruker litt tid mellom hver byte sendt, slik at den ikke hopper over
@@ -141,7 +140,7 @@ begin
 
 
     process(tx_buf_reg, tx_flag_reg, rx_clr_reg, rx_data,
-            button_press, switch, rx_flag, tx_flag, index, sending, gap_cnt)
+            button_press, switch, rx_flag,  index, sending, gap_cnt)
     begin
     
         tx_buf_next <= tx_buf_reg;
@@ -153,16 +152,15 @@ begin
             if rx_flag = '1' then
                 tx_buf_next <= rx_data;
                 tx_flag_next <= '1';
-            end if;
-
-            if tx_flag = '1'then
+                else
                 rx_clr_next <= '1';
             end if;
+
         
         else  
 
             --TX knappetrykk
-            if sending = '1' and tx_flag = '0' and gap_cnt = 0 then
+            if sending = '1' and  and gap_cnt = 0 then
                 tx_buf_next <= message(index);
                 tx_flag_next <= '1';
             end if;
