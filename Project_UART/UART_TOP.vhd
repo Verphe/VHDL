@@ -131,7 +131,7 @@ begin
             clk => clk,
             reset => reset,
             tx_start => tx_buf_flag_start,
-            data_in => data_from_ctrl_to_tx,
+            data_in => tx_data_tx_from_buffer,
             sample_tick => sample_tick,
             tx  => tx,
             tx_done_tick => tx_done_tick_from_tx,

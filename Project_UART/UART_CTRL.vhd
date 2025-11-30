@@ -27,9 +27,8 @@ entity UART_CTRL is
 
 
         --Flagg
-        rx_flag      : in  std_logic;                       -- TX er ferdig, kan motta igjen
-        tx_set_flag  : out std_logic;                      -- Flag at tx er opptatt
-        rx_clr_flag  : out std_logic                       -- Indikerer at RX har mottatt data
+        rx_flag      : in  std_logic;                      -- TX er ferdig, kan motta igjen
+        tx_set_flag  : out std_logic                     -- Flag at tx er opptatt
     );
 end UART_CTRL;
 
@@ -58,9 +57,6 @@ architecture rtl of UART_CTRL is
     signal tx_buf_next    : std_logic_vector(7 downto 0);
     signal tx_flag_reg, tx_flag_next : std_logic;
 
-    signal rx_clr_reg : std_logic := '0';
-    signal rx_clr_next : std_logic := '0';
-
     signal button_prev : std_logic := '1';
     signal baud_button_prev : std_logic := '1';
 
@@ -76,14 +72,12 @@ begin
             tx_flag_reg  <= '0';
             index <= 0;
             sending <= '0';
-            rx_clr_reg <= '0';
             button_prev <= '1';
             gap_cnt <= 0;
 
         elsif rising_edge(clk) then
             tx_buf_reg   <= tx_buf_next;
             tx_flag_reg  <= tx_flag_next;
-            rx_clr_reg <= rx_clr_next;
             
             baud_button_prev <= button_baud_sel;
 
@@ -139,28 +133,23 @@ begin
     end process;
 
 
-    process(tx_buf_reg, tx_flag_reg, rx_clr_reg, rx_data,
+    process(tx_buf_reg, tx_flag_reg, rx_data,
             button_press, switch, rx_flag,  index, sending, gap_cnt)
     begin
     
         tx_buf_next <= tx_buf_reg;
         tx_flag_next <= '0';
-        rx_clr_next <= '0';
 
         if switch = '0' then  -- Loopback
 
             if rx_flag = '1' then
                 tx_buf_next <= rx_data;
                 tx_flag_next <= '1';
-                else
-                rx_clr_next <= '1';
             end if;
-
-        
-        else  
+        else 
 
             --TX knappetrykk
-            if sending = '1' and  and gap_cnt = 0 then
+            if sending = '1' and gap_cnt = 0 then
                 tx_buf_next <= message(index);
                 tx_flag_next <= '1';
             end if;
@@ -200,6 +189,5 @@ begin
 
     tx_data <= tx_buf_reg;
     tx_set_flag <= tx_flag_reg;
-    rx_clr_flag <= rx_clr_reg;
 
 end rtl;
