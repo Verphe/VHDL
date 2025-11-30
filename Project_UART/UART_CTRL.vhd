@@ -14,7 +14,12 @@ entity UART_CTRL is
         baud_switch     : in  std_logic;  --Bytter mellom 9600 eller byttbar 
         button_press    : in  std_logic;                      -- Knappetrykk
         button_baud_sel : in  std_logic; -- Velger baud rate (2^4 forskjellige)
+        parity_switch   : in  std_logic; -- Parity bit av/på
+        parity_switch_oe: in  std_logic; -- Odd/Even parity
+        
+
         baud_limit      : out unsigned(9 downto 0); --Outputverdi til baudgenerator
+        parity_value    : out unsigned(1 downto 0); --Paritetsbit verdi til TX/RX
 
         --Data
         rx_data           : in  std_logic_vector(7 downto 0);   -- Seriell data inn
@@ -58,6 +63,7 @@ architecture rtl of UART_CTRL is
     signal rx_clr_next : std_logic := '0';
 
     signal button_prev : std_logic := '1';
+    signal baud_button_prev : std_logic := '1';
 
     signal gap_cnt : integer range 0 to 40 := 0;
 
@@ -79,16 +85,31 @@ begin
             tx_buf_reg   <= tx_buf_next;
             tx_flag_reg  <= tx_flag_next;
             rx_clr_reg <= rx_clr_next;
+            
+            baud_button_prev <= button_baud_sel;
 
             --Bytter baudrate om vi har på variabel baudrate
             if baud_switch = '1' then
-                if button_baud_sel = '1' then
+                if baud_button_prev = '1' and button_baud_sel = '0' then
                     if baud_select = 10 then
                         baud_select <= 1;
                     else
                         baud_select <= baud_select + 1;
                     end if;
                 end if;
+            end if;
+
+
+
+            --Bytter paritetsbit innstilling
+            if parity_switch = '1' then
+                if parity_switch_oe = '1' then
+                    parity_value <= "01"; --Odde
+                else
+                    parity_value <= "10"; --Par
+                end if;
+            else
+                parity_value <= "00"; --Ingen
             end if;
 
             button_prev <= button_press; --Hvis man holder inne så vil ikke 'H' bli sendt uendelig

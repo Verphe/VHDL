@@ -15,6 +15,8 @@ entity uart_top is
         ctrl_btn        : in  std_logic;                     --Knappetrykk for å sende data
         baud_switch     : in  std_logic;                     --Switch for å velge mellom fast 9600 baud eller byttbar baudrate
         button_baud_sel : in  std_logic;                     --Knapp for å bytte baudrate når byttbar baud er valgt
+        parity_switch   : in  std_logic;                     --Switch for å aktivere/deaktivere paritetsbit
+        parity_switch_oe: in  std_logic;                     --Switch for å velge mellom odde/par paritetsbit   
         HEX0            : out std_logic_vector(7 downto 0);  --Hex displayer
         HEX1            : out std_logic_vector(7 downto 0);     
         HEX2            : out std_logic_vector(7 downto 0)     
@@ -34,7 +36,6 @@ architecture arch of uart_top is
     signal tx_buf_flag_start : std_logic; --Start sending tx
     signal tx_data_tx_from_buffer : std_logic_vector(7 downto 0);
     signal tx_done_tick_from_tx : std_logic;
-
     
     --CTRL-signaler
     signal data_from_rx_to_ctrl     : std_logic_vector(7 downto 0);
@@ -42,6 +43,7 @@ architecture arch of uart_top is
     signal set_flag_from_ctrl_to_tx : std_logic;
     signal clr_flag_from_ctrl_to_rx : std_logic;
     signal baud_limit_from_ctrl     : unsigned(9 downto 0);
+    signal parity_value_from_ctrl   : unsigned(1 downto 0);
 
 begin
     --Baud generator
@@ -74,7 +76,8 @@ begin
             rx           => rx,
             sample_tick  => sample_tick,
             rx_done_tick => rx_done_tick_to_setflag,
-            data_out     => rx_data_to_save_byte
+            data_out     => rx_data_to_save_byte,
+            parity_value => parity_value_from_ctrl
         );
 
     -- Lagring av mottatt byte
@@ -93,7 +96,7 @@ begin
         port map (
             clk        => clk,
             reset      => reset,
-            data_in    => rx_flag_from_rx_to_ctrl,
+            data_in    => data_from_rx_to_ctrl,
             -- data_ready => data_rdy,
             HEX0       => HEX0,
             HEX1       => HEX1,
@@ -123,7 +126,10 @@ begin
             rx_clr_flag     => clr_flag_from_ctrl_to_rx,
             baud_switch     => baud_switch,
             button_baud_sel => button_baud_sel,
-            baud_limit      => baud_limit_from_ctrl
+            baud_limit      => baud_limit_from_ctrl,
+            parity_switch   => parity_switch,
+            parity_switch_oe=> parity_switch_oe,
+            parity_value    => parity_value_from_ctrl
         );
         UART_tx_inst : entity work.UART_TX
         port map (
@@ -133,7 +139,8 @@ begin
             data_in => data_from_ctrl_to_tx,
             sample_tick => sample_tick,
             tx  => tx,
-            tx_done_tick => tx_done_tick_from_tx
+            tx_done_tick => tx_done_tick_from_tx,
+            parity_value => parity_value_from_ctrl
         );
 
         UART_tx_buff_flag_inst : entity work.UART_TX_BUFFER_FLAG

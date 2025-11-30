@@ -8,7 +8,8 @@ entity UART_RX is
     generic (
         DATABIT        : integer := 8; --Antall databit
         DBIT_IN_BINARY : integer := 3; --Maks antall databit i binær [1 1 1] = 8
-        STOPBIT_TICKS  : integer := 8  --Antall ticks for stoppbit (8*1)
+        STOPBIT_TICKS  : integer := 8;  --Antall ticks for stoppbit (8*1)
+        OVERSAMPLING   : integer := 8  --Hvor mye oversampling
     );
     port (
         clk            : in  std_logic;               --Systemklokke
@@ -16,19 +17,20 @@ entity UART_RX is
         rx             : in  std_logic;               --Serriell data inn
         sample_tick    : in  std_logic;               --Sample tick (8x baud)
         rx_done_tick   : out std_logic;               --Data mottatt flagg
-        data_out       : out std_logic_vector(DATABIT-1 downto 0) --Mottatt data
+        data_out       : out std_logic_vector(DATABIT-1 downto 0); --Mottatt data
+        parity_value   : in unsigned (1 downto 0)     --Paritetsbit innstilling (00 = ingen, 01 = odde, 10 = partall
     );
 end UART_RX;
 
 architecture arch of UART_RX is
-    type state_type is (IDLE, START, DATA, STOP);
+    type state_type is (IDLE, START, DATA, STOP, PARITY);
     signal state_reg, state_next : state_type;
 
     --8x oversampling (0-7) gir 3 bit
     signal s_reg, s_next : unsigned(2 downto 0);  --Punktprøvingsteller (0-7)
     signal n_reg, n_next : unsigned(2 downto 0);  --Databitsteller (0-7)
     signal b_reg, b_next : std_logic_vector(DATABIT-1 downto 0); --Databuffer
-    
+    signal p_reg, p_next : unsigned(2 downto 0); --Paritetsbitteller
     begin 
     
     --Tilstandsmaskin og register
@@ -40,12 +42,14 @@ architecture arch of UART_RX is
             s_reg <= (others => '0'); --Reset punktprøvingsteller 
             n_reg <= (others => '0'); --Reset databiteller
             b_reg <= (others => '0'); --Reset databuffer
+            p_reg <= (others => '0'); --Reset paritetsbitteller
         
         elsif rising_edge(clk) then
             state_reg <= state_next;
             s_reg <= s_next; --Punktprøvingsteller oppdatering
             n_reg <= n_next; --Databiteller oppdatering
             b_reg <= b_next; --Databuffer oppdatering
+            p_reg <= p_next; --Paritetsbitteller oppdatering
         end if;
     end process;
 
@@ -59,6 +63,7 @@ architecture arch of UART_RX is
         s_next <= s_reg;
         n_next <= n_reg;
         b_next <= b_reg;
+        p_next <= p_reg;
         rx_done_tick <= '0';
 
         case state_reg is
@@ -82,14 +87,18 @@ architecture arch of UART_RX is
                 end if;
             
             when DATA => --Sjekk databit
-                if sample_tick = '1' then --Dersom databit er 1
+                if sample_tick = '1' then --Dersom baud-tick er 1
                     if to_integer(s_reg) = (DATABIT-1) then --OG dersom databitten er registrert på midten
                         s_next <= (others => '0'); --Reset punktteller
+
+                        if rx = '1' then --Legg til antall 1ere
+                            p_next <= p_reg + 1;
+                        end if;
 
                         b_next <= b_reg(DATABIT-2 downto 0) & rx; --Fjerner forrige buffer mot minst signifikante bit og setter nyeste rx-bit inn mest signifikante bit
 
                         if to_integer(n_reg) = (DATABIT-1) then --Dersom hel byte er motatt
-                            state_next <= STOP; --Bytt til stoppbit-tilstand
+                            state_next <= PARITY; --Bytt til stoppbit-tilstand
                         else
                             n_next <= n_reg + 1; --Ellers tell flere databit
                         end if;
@@ -99,15 +108,59 @@ architecture arch of UART_RX is
                     end if;
                 end if;
             
-            when STOP => --Sjekk stoppbit
+            when PARITY => --Sjekk paritetsbit
                 if sample_tick = '1' then
-                    if to_integer(s_reg) = STOPBIT_TICKS - 1 then
-                        state_next <= IDLE; --Gå tilbake til idle tilstand
-                        rx_done_tick <= '1'; --Byte er klar! yay
+                    if s_reg = OVERSAMPLING -1 then
+                        if parity_value /= "00" then
+                            if p_reg mod 2 = 0 then
+                                if parity_value = "10" then
+                                    if rx = '1' then
+                                        state_next <= STOP;
+                                    else
+                                        state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                    end if;
+                                elsif parity_value = "01" then
+                                    if rx = '0' then
+                                        state_next <= STOP;
+                                    else
+                                        state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                    end if;
+                                end if;
+                            else
+                                if parity_value = "10" then
+                                    if rx = '0' then
+                                        state_next <= STOP;
+                                    else
+                                        state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                    end if;
+                                elsif parity_value = "01" then
+                                    if rx = '1' then
+                                        state_next <= STOP;
+                                    else
+                                        state_next <= IDLE; --Feil i paritet, gå tilbake til idle
+                                    end if;
+                                end if;
+                            end if;
+                        else
+                            state_next <= STOP; --Hopp til stoppbit hvis ingen paritet
+                        end if;
+                        s_next <= (others => '0');
                     else
-                        s_next <= s_reg + 1; --Tell flere punkter
+                        s_next <= s_reg + 1;
                     end if;
                 end if;
+                    
+
+            when STOP => --Sjekk stoppbit
+                if rx = '1' then
+                    if sample_tick = '1' then
+                        if to_integer(s_reg) = STOPBIT_TICKS - 1 then
+                            state_next <= IDLE; --Gå tilbake til idle tilstand
+                            rx_done_tick <= '1'; --Byte er klar! yay
+                        else
+                            s_next <= s_reg + 1; --Tell flere punkter
+                        end if;
+                    end if;
         end case;
     end process;
 

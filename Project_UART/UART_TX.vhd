@@ -15,7 +15,8 @@ entity UART_TX is
         data_in         : in  std_logic_vector(DATABITS-1 downto 0); --Data som skal sendes
         sample_tick     : in  std_logic;               --Sample tick (8x baud)
         tx              : out std_logic;               --Seriell data ut
-        tx_done_tick    : out std_logic                --Data sendt flagg
+        tx_done_tick    : out std_logic;               --Data sendt flagg
+        parity_value    : in unsigned (1 downto 0)     --Paritetsbit innstilling (00 = ingen, 01 = odde, 10 = partall
     );
 end UART_TX;
 
@@ -101,7 +102,7 @@ architecture arch of UART_TX is
                         s_next <= (others  => '0');
                         b_next <= '0' & b_reg(DATABITS-1 downto 1);
                         if n_reg = DATABITS-1 then
-                            state_next <= STOP;
+                            state_next <= PARITY;
                         else
                             n_next <= n_reg + 1;
                         end if;
@@ -111,11 +112,35 @@ architecture arch of UART_TX is
                 end if;
             
             when PARITY =>
-                if p_reg mod 2 = 0 then
-                    tx_next <= '0'; --Sender 0 for partitet
-                else
-                    tx_next <= '1'; --Sender 1 for partitet
-                end if;    
+                if sample_tick = '1' then
+                    if s_reg = OVERSAMPLING-1 then
+                        s_next <= (others => '0');
+                        if parity_value /= "00" then
+                            if p_reg mod 2 = 0 then
+                                if parity_value = "10" then --If par
+                                    tx_next <= '0';
+                                    state_next <= STOP;
+                                elsif parity_value = "01" then --If odde
+                                    tx_next <= '1';
+                                    state_next <= STOP;
+                                end if;
+                            else
+                                if parity_value = "10" then --If par
+                                    tx_next <= '1';
+                                    state_next <= STOP;
+                                elsif parity_value = "01" then --If odde
+                                    tx_next <= '0';
+                                    state_next <= STOP;
+                                end if;
+                            end if;
+                        else
+                            state_next <= STOP; --Hopp til stoppbit hvis ingen paritet
+                            s_next <= (others => '0');
+                        end if;
+                    else
+                        s_next <= s_reg + 1;
+                    end if;    
+                end if;
 
             when STOP =>
                 tx_next <= '1';
